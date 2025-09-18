@@ -1,0 +1,46 @@
+<div class="tab-pane" id="sign-up-pane" role="tabpanel" aria-labelledby="sign-up-tab">
+    <div class="form-container">
+        <h2 class="form-title">Criar conta</h2>
+        <p class="form-subtitle">Crie uma conta para continuar.</p>
+
+        <form id="sign-up-form" novalidate>
+            <div class="mb-3">
+                <label for="sign-up-username" class="form-label">Nome de usuário</label>
+                <input type="text" class="form-control" id="sign-up-username" placeholder="Digite seu nome de usuário"
+                    required aria-describedby="sign-up-username-feedback">
+                <div id="sign-up-username-feedback" class="invalid-feedback">
+                    Por favor, insira seu nome de usuário.
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="sign-up-email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="sign-up-email" placeholder="Digite seu email" required
+                    aria-describedby="sign-up-email-feedback">
+                <div id="sign-up-email-feedback" class="invalid-feedback">
+                    Por favor, insira um email válido.
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="sign-up-password" class="form-label">Senha</label>
+                <input type="password" class="form-control" id="sign-up-password" placeholder="Digite sua senha"
+                    required minlength="6" aria-describedby="sign-up-password-feedback">
+                <div id="sign-up-password-feedback" class="invalid-feedback">
+                    A senha deve ter pelo menos 6 caracteres.
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="sign-up-confirm" class="form-label">Confirme a senha</label>
+                <input type="password" class="form-control" id="sign-up-confirm" placeholder="Confirme sua senha"
+                    required aria-describedby="sign-up-confirm-feedback">
+                <div id="sign-up-confirm-feedback" class="invalid-feedback">
+                    As senhas não coincidem.
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Criar conta</button>
+        </form>
+    </div>
+</div>

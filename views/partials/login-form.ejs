@@ -1,0 +1,33 @@
+<div class="tab-pane show active" id="login-pane" role="tabpanel" aria-labelledby="login-tab">
+    <div class="form-container">
+        <h2 class="form-title">Entrar</h2>
+        <p class="form-subtitle">Faça login para continuar.</p>
+
+        <form id="login-form" novalidate>
+            <div class="mb-3">
+                <label for="login-email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="login-email" placeholder="Digite seu email" required
+                    aria-describedby="login-email-feedback">
+                <div id="login-email-feedback" class="invalid-feedback">
+                    Por favor, insira um email válido.
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="login-password" class="form-label">Senha</label>
+                <input type="password" class="form-control" id="login-password" placeholder="Digite sua senha" required
+                    aria-describedby="login-password-feedback">
+                <div id="login-password-feedback" class="invalid-feedback">
+                    Por favor, insira sua senha.
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-2">Entrar</button>
+
+            <!-- <button type="button" class="btn btn-google w-100 d-flex align-items-center justify-content-center">
+          <div class="google-icon"></div>
+          Entrar com Google
+        </button> -->
+        </form>
+    </div>
+</div>
