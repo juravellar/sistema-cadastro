@@ -10,7 +10,6 @@
       const email = document.getElementById("login-email").value;
       const password = document.getElementById("login-password").value;
 
-      // Enviar dados para o servidor
       fetch("/login", {
         method: "POST",
         headers: {
@@ -22,10 +21,8 @@
       })
         .then((response) => {
           if (response.ok) {
-            // Se o login foi bem-sucedido, redirecionar para /home
             window.location.href = "/home";
           } else {
-            // Se houve erro, mostrar mensagem
             const toast = new bootstrap.Toast(
               document.getElementById("errorToast") ||
                 createToast("Credenciais inválidas!", "danger")
@@ -65,7 +62,6 @@
       const email = document.getElementById("sign-up-email").value;
       const passwordValue = password.value;
 
-      // Enviar dados para o servidor
       fetch("/sign-up", {
         method: "POST",
         headers: {
@@ -79,10 +75,8 @@
       })
         .then((response) => {
           if (response.ok) {
-            // Se o cadastro foi bem-sucedido, redirecionar para /home
             window.location.href = "/home";
           } else {
-            // Se houve erro, mostrar mensagem
             const toast = new bootstrap.Toast(
               document.getElementById("errorToast") ||
                 createToast("Erro ao criar conta!", "danger")

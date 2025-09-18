@@ -1,10 +1,10 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-const ensureAuthenticated = require('../middlewares/auth');
+const ensureAuthenticated = require("../middlewares/auth");
 
 /* GET home page */
-router.get('/', ensureAuthenticated, function(req, res) {
-  res.render('home', { user: req.session.user });
+router.get("/", ensureAuthenticated, function (req, res) {
+  res.render("home", { user: req.session.user });
 });
 
 module.exports = router;
