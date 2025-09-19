@@ -9,11 +9,11 @@ module.exports = (sequelize) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      nome: {
+      username: {
         type: DataTypes.STRING(200),
         allowNull: false,
       },
-      senha: {
+      password: {
         type: DataTypes.STRING(200),
         allowNull: false,
       },

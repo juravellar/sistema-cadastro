@@ -14,8 +14,12 @@ router.post("/login", async function (req, res) {
 
   try {
     const user = await User.findOne({ where: { email } });
-    if (user && (await bcrypt.compare(password, user.senha))) {
-      req.session.user = { id: user.id, nome: user.nome, email: user.email };
+    if (user && (await bcrypt.compare(password, user.password))) {
+      req.session.user = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      };
       return res.redirect("/home");
     }
     res.status(401).send("Credenciais inválidas");
@@ -38,14 +42,14 @@ router.post("/sign-up", async function (req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
-      nome: username,
+      username: username,
       email: email,
-      senha: hashedPassword,
+      password: hashedPassword,
     });
 
     req.session.user = {
       id: newUser.id,
-      nome: newUser.nome,
+      username: newUser.username,
       email: newUser.email,
     };
     return res.redirect("/home");

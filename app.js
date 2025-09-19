@@ -7,8 +7,8 @@ const session = require("express-session");
 require("dotenv").config();
 
 const indexRouter = require("./routes/index");
-const usersRouter = require("./routes/users");
 const homeRouter = require("./routes/home");
+const apiRouter = require("./routes/api");
 const { sequelize } = require("./models");
 
 const app = express();
@@ -35,8 +35,8 @@ app.use(
 
 // rotas
 app.use("/", indexRouter);
-app.use("/users", usersRouter);
 app.use("/home", homeRouter);
+app.use("/api", apiRouter);
 
 // database sync
 (async () => {
