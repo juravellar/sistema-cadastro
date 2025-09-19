@@ -28,6 +28,10 @@
                 <!-- A tabela será preenchida dinamicamente via JavaScript -->
             </tbody>
         </table>
+
+        <form action="/logout" method="POST" class="mb-4 mt-3">
+            <button type="submit" class="btn btn-primary mb-2">Sair</button>
+        </form>
     </div>
 
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
@@ -79,10 +83,6 @@
             </form>
         </div>
     </div>
-
-    <form action="/logout" method="POST" class="mb-4">
-        <button type="submit" class="btn btn-primary mb-2">Sair</button>
-    </form>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/javascripts/script.js" defer></script>
