@@ -20,6 +20,9 @@ router.post("/login", async function (req, res) {
         username: user.username,
         email: user.email,
       };
+      if (user.email === "admin@admin.com") {
+        return res.redirect("/home-admin");
+      }
       return res.redirect("/home");
     }
     res.status(401).send("Credenciais inválidas");
@@ -52,6 +55,10 @@ router.post("/sign-up", async function (req, res) {
       username: newUser.username,
       email: newUser.email,
     };
+    // Redireciona admin para home-admin, outros usuários para home
+    if (newUser.email === "admin@admin.com") {
+      return res.redirect("/home-admin");
+    }
     return res.redirect("/home");
   } catch (err) {
     console.error(err);

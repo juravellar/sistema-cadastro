@@ -8,6 +8,7 @@ require("dotenv").config();
 
 const indexRouter = require("./routes/index");
 const homeRouter = require("./routes/home");
+const homeAdminRouter = require("./routes/home-admin");
 const apiRouter = require("./routes/api");
 const { sequelize } = require("./models");
 
@@ -36,6 +37,7 @@ app.use(
 // rotas
 app.use("/", indexRouter);
 app.use("/home", homeRouter);
+app.use("/home-admin", homeAdminRouter);
 app.use("/api", apiRouter);
 
 // database sync
@@ -44,6 +46,22 @@ app.use("/api", apiRouter);
     await sequelize.authenticate();
     await sequelize.sync();
     console.log("Banco sincronizado com sucesso.");
+
+    const bcrypt = require("bcrypt");
+    const { User } = require("./models");
+
+    const adminExists = await User.findOne({
+      where: { email: "admin@admin.com" },
+    });
+    if (!adminExists) {
+      const hashedPassword = await bcrypt.hash("admin", 10);
+      await User.create({
+        username: "admin",
+        email: "admin@admin.com",
+        password: hashedPassword,
+      });
+      console.log("Usuário admin criado: admin@admin.com / admin");
+    }
   } catch (err) {
     console.error("Erro ao sincronizar o banco:", err);
   }

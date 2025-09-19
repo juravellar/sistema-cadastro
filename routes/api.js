@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 const { User } = require("../models");
 const bcrypt = require("bcrypt");
+const ensureAdminAuthenticated = require("../middlewares/admin-auth");
 
 // API root
 router.get("/", function (req, res) {
@@ -40,6 +41,7 @@ router.post("/sign-up", async function (req, res) {
         username: newUser.username,
         email: newUser.email,
       },
+      redirectTo: newUser.email === "admin@admin.com" ? "/home-admin" : "/home",
     });
   } catch (err) {
     console.error(err);
@@ -63,6 +65,7 @@ router.post("/login", async function (req, res) {
       return res.json({
         success: true,
         user: { id: user.id, username: user.username, email: user.email },
+        redirectTo: user.email === "admin@admin.com" ? "/home-admin" : "/home",
       });
     }
     res.status(401).json({ success: false, message: "Credenciais inválidas" });
@@ -80,7 +83,7 @@ router.post("/logout", function (req, res) {
 });
 
 // API get users
-router.get("/users", async function (req, res) {
+router.get("/users", ensureAdminAuthenticated, async function (req, res) {
   try {
     const users = await User.findAll({
       attributes: ["id", "username", "email"],
@@ -95,7 +98,7 @@ router.get("/users", async function (req, res) {
 });
 
 // API get user by id
-router.get("/user/id/:id", async function (req, res) {
+router.get("/user/id/:id", ensureAdminAuthenticated, async function (req, res) {
   const { id } = req.params;
 
   try {
@@ -128,7 +131,7 @@ router.get("/user/id/:id", async function (req, res) {
 });
 
 // API update user by id
-router.put("/user/id/:id", async function (req, res) {
+router.put("/user/id/:id", ensureAdminAuthenticated, async function (req, res) {
   const { id } = req.params;
   const { username, email, password } = req.body;
 
@@ -189,42 +192,46 @@ router.put("/user/id/:id", async function (req, res) {
 });
 
 // API delete user by id
-router.delete("/user/id/:id", async function (req, res) {
-  const { id } = req.params;
+router.delete(
+  "/user/id/:id",
+  ensureAdminAuthenticated,
+  async function (req, res) {
+    const { id } = req.params;
 
-  try {
-    if (isNaN(id)) {
-      return res.status(400).json({
+    try {
+      if (isNaN(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "ID inválido. O ID deve ser numérico.",
+        });
+      }
+
+      const user = await User.findByPk(id, {
+        attributes: ["id", "username", "email"],
+      });
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: `Usuário com id ${id} não encontrado.`,
+        });
+      }
+
+      await user.destroy();
+
+      return res.status(200).json({
+        success: true,
+        message: `Usuário com id ${id} deletado com sucesso.`,
+        user,
+      });
+    } catch (err) {
+      console.error("Erro ao deletar usuário:", err);
+      return res.status(500).json({
         success: false,
-        message: "ID inválido. O ID deve ser numérico.",
+        message: "Erro interno ao deletar usuário.",
       });
     }
-
-    const user = await User.findByPk(id, {
-      attributes: ["id", "username", "email"],
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: `Usuário com id ${id} não encontrado.`,
-      });
-    }
-
-    await user.destroy();
-
-    return res.status(200).json({
-      success: true,
-      message: `Usuário com id ${id} deletado com sucesso.`,
-      user,
-    });
-  } catch (err) {
-    console.error("Erro ao deletar usuário:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Erro interno ao deletar usuário.",
-    });
   }
-});
+);
 
 module.exports = router;
