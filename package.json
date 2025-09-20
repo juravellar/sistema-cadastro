@@ -4,7 +4,11 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www"
+    "dev": "nodemon ./bin/www",
+    "create-db": "node scripts/create-database.js",
+    "init-db": "node scripts/init-db.js",
+    "init-db:force": "node scripts/init-db.js --force",
+    "init-db:alter": "node scripts/init-db.js --alter"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

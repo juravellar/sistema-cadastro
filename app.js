@@ -11,10 +11,10 @@ const homeRouter = require("./routes/home");
 const homeAdminRouter = require("./routes/home-admin");
 const apiRouter = require("./routes/api");
 const { sequelize } = require("./models");
+const createDatabase = require("./scripts/create-database");
 
 const app = express();
 
-// view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
@@ -24,7 +24,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-// sessão
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "segredo-dev",
@@ -34,18 +33,23 @@ app.use(
   })
 );
 
-// rotas
 app.use("/", indexRouter);
 app.use("/home", homeRouter);
 app.use("/home-admin", homeAdminRouter);
 app.use("/api", apiRouter);
 
-// database sync
 (async () => {
   try {
+    await createDatabase();
+
     await sequelize.authenticate();
-    await sequelize.sync();
-    console.log("Banco sincronizado com sucesso.");
+    console.log("Conexão com o banco de dados estabelecida com sucesso.");
+
+    await sequelize.sync({
+      force: false,
+      alter: process.env.NODE_ENV === "development",
+    });
+    console.log("Banco de dados sincronizado com sucesso.");
 
     const bcrypt = require("bcrypt");
     const { User } = require("./models");
@@ -61,18 +65,21 @@ app.use("/api", apiRouter);
         password: hashedPassword,
       });
       console.log("Usuário admin criado: admin@admin.com / admin");
+    } else {
+      console.log("Usuário admin já existe.");
     }
   } catch (err) {
     console.error("Erro ao sincronizar o banco:", err);
+    console.error(
+      "Verifique se o PostgreSQL está rodando e as credenciais estão corretas."
+    );
   }
 })();
 
-// catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
 });
 
-// error handler
 app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
