@@ -12,7 +12,7 @@ COPY frontend/package*.json ./frontend/
 # Install dependencies
 RUN npm install
 RUN cd backend && npm install --omit=dev
-RUN cd frontend && npm install
+RUN cd frontend && npm install --omit=dev
 
 # Copy source code
 COPY . .
