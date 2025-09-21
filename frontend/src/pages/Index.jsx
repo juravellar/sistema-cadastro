@@ -7,18 +7,55 @@ function Index() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Estados para Login
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [loginErrors, setLoginErrors] = useState({});
 
+  // Estados para SignUp
   const [signupUsername, setSignupUsername] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  const [signupErrors, setSignupErrors] = useState({});
+
+  // Função para validar email
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Função para limpar erros
+  const clearErrors = () => {
+    setError("");
+    setLoginErrors({});
+    setSignupErrors({});
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setLoginErrors({});
+
+    // Validação de campos obrigatórios
+    const errors = {};
+
+    if (!loginEmail.trim()) {
+      errors.email = "Por favor, insira um email válido.";
+    } else if (!validateEmail(loginEmail)) {
+      errors.email = "Por favor, insira um email válido.";
+    }
+
+    if (!loginPassword.trim()) {
+      errors.password = "Por favor, insira sua senha.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setLoginErrors(errors);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/login", {
@@ -47,15 +84,35 @@ function Index() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setSignupErrors({});
 
-    if (signupPassword !== signupConfirmPassword) {
-      setError("As senhas não coincidem");
-      setIsLoading(false);
-      return;
+    // Validação de campos obrigatórios
+    const errors = {};
+
+    if (!signupUsername.trim()) {
+      errors.username = "Por favor, insira seu nome de usuário.";
     }
 
-    if (signupPassword.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
+    if (!signupEmail.trim()) {
+      errors.email = "Por favor, insira um email válido.";
+    } else if (!validateEmail(signupEmail)) {
+      errors.email = "Por favor, insira um email válido.";
+    }
+
+    if (!signupPassword.trim()) {
+      errors.password = "A senha deve ter pelo menos 6 caracteres.";
+    } else if (signupPassword.length < 6) {
+      errors.password = "A senha deve ter pelo menos 6 caracteres.";
+    }
+
+    if (!signupConfirmPassword.trim()) {
+      errors.confirmPassword = "As senhas não coincidem.";
+    } else if (signupPassword !== signupConfirmPassword) {
+      errors.confirmPassword = "As senhas não coincidem.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setSignupErrors(errors);
       setIsLoading(false);
       return;
     }
@@ -98,7 +155,7 @@ function Index() {
               }`}
               onClick={() => {
                 setActiveTab("login");
-                setError("");
+                clearErrors();
               }}
               type="button"
             >
@@ -112,7 +169,7 @@ function Index() {
               }`}
               onClick={() => {
                 setActiveTab("signup");
-                setError("");
+                clearErrors();
               }}
               type="button"
             >
@@ -141,7 +198,9 @@ function Index() {
                     </label>
                     <input
                       type="email"
-                      className="form-control"
+                      className={`form-control ${
+                        loginErrors.email ? "is-invalid" : ""
+                      }`}
                       id="login-email"
                       placeholder="Digite seu email"
                       value={loginEmail}
@@ -149,6 +208,11 @@ function Index() {
                       required
                       disabled={isLoading}
                     />
+                    {loginErrors.email && (
+                      <div className="invalid-feedback">
+                        {loginErrors.email}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mb-4">
@@ -157,7 +221,9 @@ function Index() {
                     </label>
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${
+                        loginErrors.password ? "is-invalid" : ""
+                      }`}
                       id="login-password"
                       placeholder="Digite sua senha"
                       value={loginPassword}
@@ -165,6 +231,11 @@ function Index() {
                       required
                       disabled={isLoading}
                     />
+                    {loginErrors.password && (
+                      <div className="invalid-feedback">
+                        {loginErrors.password}
+                      </div>
+                    )}
                   </div>
 
                   <button
@@ -198,7 +269,9 @@ function Index() {
                     </label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${
+                        signupErrors.username ? "is-invalid" : ""
+                      }`}
                       id="signup-username"
                       placeholder="Digite seu nome de usuário"
                       value={signupUsername}
@@ -206,6 +279,11 @@ function Index() {
                       required
                       disabled={isLoading}
                     />
+                    {signupErrors.username && (
+                      <div className="invalid-feedback">
+                        {signupErrors.username}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mb-3">
@@ -214,7 +292,9 @@ function Index() {
                     </label>
                     <input
                       type="email"
-                      className="form-control"
+                      className={`form-control ${
+                        signupErrors.email ? "is-invalid" : ""
+                      }`}
                       id="signup-email"
                       placeholder="Digite seu email"
                       value={signupEmail}
@@ -222,6 +302,11 @@ function Index() {
                       required
                       disabled={isLoading}
                     />
+                    {signupErrors.email && (
+                      <div className="invalid-feedback">
+                        {signupErrors.email}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mb-3">
@@ -230,7 +315,9 @@ function Index() {
                     </label>
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${
+                        signupErrors.password ? "is-invalid" : ""
+                      }`}
                       id="signup-password"
                       placeholder="Digite sua senha"
                       value={signupPassword}
@@ -239,6 +326,11 @@ function Index() {
                       minLength="6"
                       disabled={isLoading}
                     />
+                    {signupErrors.password && (
+                      <div className="invalid-feedback">
+                        {signupErrors.password}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mb-4">
@@ -247,7 +339,9 @@ function Index() {
                     </label>
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${
+                        signupErrors.confirmPassword ? "is-invalid" : ""
+                      }`}
                       id="signup-confirm"
                       placeholder="Confirme sua senha"
                       value={signupConfirmPassword}
@@ -255,6 +349,11 @@ function Index() {
                       required
                       disabled={isLoading}
                     />
+                    {signupErrors.confirmPassword && (
+                      <div className="invalid-feedback">
+                        {signupErrors.confirmPassword}
+                      </div>
+                    )}
                   </div>
 
                   <button
