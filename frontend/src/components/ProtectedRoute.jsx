@@ -94,7 +94,5 @@ export const PublicRoute = ({ children }) => {
     );
   }
 
-  // Permite acesso à página de login mesmo quando logado
-  // Remove o redirecionamento automático
   return children;
 };
