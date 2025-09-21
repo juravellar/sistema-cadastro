@@ -107,6 +107,9 @@ app.use("/api", apiRouter);
     console.log(
       "Aplicação iniciará sem conexão com o banco. Tente novamente mais tarde."
     );
+    if (process.env.NODE_ENV === "production") {
+      console.log("Continuando em modo de produção sem banco de dados...");
+    }
   }
 })();
 

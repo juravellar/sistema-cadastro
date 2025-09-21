@@ -9,6 +9,7 @@ require("dotenv").config();
 const { Sequelize } = require("sequelize");
 
 const {
+  DATABASE_URL,
   PGHOST = "localhost",
   PGPORT = 5432,
   PGUSER = "postgres",
@@ -17,6 +18,11 @@ const {
 } = process.env;
 
 async function createDatabase() {
+  if (DATABASE_URL) {
+    console.log("ℹ️  Usando DATABASE_URL - pulando criação de banco");
+    return;
+  }
+
   const adminSequelize = new Sequelize("postgres", PGUSER, PGPASSWORD, {
     host: PGHOST,
     port: PGPORT,
@@ -45,7 +51,9 @@ async function createDatabase() {
     console.error(
       "💡 Verifique se o PostgreSQL está rodando e as credenciais estão corretas"
     );
-    process.exit(1);
+    if (process.env.NODE_ENV !== "production") {
+      process.exit(1);
+    }
   } finally {
     await adminSequelize.close();
   }
