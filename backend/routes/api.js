@@ -41,7 +41,7 @@ router.post("/signup", async function (req, res) {
         username: newUser.username,
         email: newUser.email,
       },
-      redirectTo: newUser.email.includes("@admin") ? "/admin" : "/home",
+      redirectTo: newUser.email.includes("@admin") ? "/home-admin" : "/home",
     });
   } catch (err) {
     console.error(err);
@@ -65,7 +65,7 @@ router.post("/login", async function (req, res) {
       return res.json({
         success: true,
         user: { id: user.id, username: user.username, email: user.email },
-        redirectTo: user.email.includes("@admin") ? "/admin" : "/home",
+        redirectTo: user.email.includes("@admin") ? "/home-admin" : "/home",
       });
     }
     res.status(401).json({ success: false, message: "Credenciais inválidas" });

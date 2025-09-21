@@ -64,13 +64,15 @@ function Home() {
     <div className="content-container">
       <div className="container mt-4">
         <h1>Bem-vindo, {user?.username || user?.email}!</h1>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={handleLogout}
-        >
-          Sair
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleLogout}
+          >
+            Sair
+          </button>
+        </div>
       </div>
     </div>
   );

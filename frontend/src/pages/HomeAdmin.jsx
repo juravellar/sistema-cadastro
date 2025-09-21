@@ -213,13 +213,15 @@ function HomeAdmin() {
           </tbody>
         </table>
 
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={handleLogout}
-        >
-          Sair
-        </button>
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleLogout}
+          >
+            Sair
+          </button>
+        </div>
       </div>
 
       {/* Modal de Edição */}

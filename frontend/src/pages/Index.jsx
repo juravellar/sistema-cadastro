@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 function Index() {
   const [activeTab, setActiveTab] = useState("login");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login, signup } = useAuth();
 
   // Estados para Login
   const [loginEmail, setLoginEmail] = useState("");
@@ -58,19 +60,12 @@ function Index() {
     }
 
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
-        credentials: "include",
-      });
+      const result = await login(loginEmail, loginPassword);
 
-      const data = await response.json();
-
-      if (data.success) {
-        navigate(data.redirectTo || "/home");
+      if (result.success) {
+        navigate(result.redirectTo || "/home");
       } else {
-        setError(data.message || "Credenciais inválidas!");
+        setError(result.message || "Credenciais inválidas!");
       }
     } catch (error) {
       console.error("Erro:", error);
@@ -118,23 +113,12 @@ function Index() {
     }
 
     try {
-      const response = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: signupUsername,
-          email: signupEmail,
-          password: signupPassword,
-        }),
-        credentials: "include",
-      });
+      const result = await signup(signupUsername, signupEmail, signupPassword);
 
-      const data = await response.json();
-
-      if (data.success) {
-        navigate(data.redirectTo || "/home");
+      if (result.success) {
+        navigate(result.redirectTo || "/home");
       } else {
-        setError(data.message || "Erro ao criar conta!");
+        setError(result.message || "Erro ao criar conta!");
       }
     } catch (error) {
       console.error("Erro:", error);

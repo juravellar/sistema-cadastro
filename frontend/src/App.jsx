@@ -1,28 +1,60 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import {
+  ProtectedRoute,
+  AdminRoute,
+  PublicRoute,
+} from "./components/ProtectedRoute";
 import Index from "./pages/Index";
-import Login from "./pages/components/Login";
-import SignUp from "./pages/components/SignUp";
 import Home from "./pages/Home";
 import HomeAdmin from "./pages/HomeAdmin";
-import ErrorPage from "./pages/components/ErrorPage";
+import ErrorPage from "./pages/ErrorPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./assets/App.css";
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/admin" element={<HomeAdmin />} />
-          <Route path="/error" element={<ErrorPage />} />
-          <Route path="*" element={<ErrorPage />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            {/* Rotas públicas - redirecionam se já autenticado */}
+            <Route
+              path="/"
+              element={
+                <PublicRoute>
+                  <Index />
+                </PublicRoute>
+              }
+            />
+
+            {/* Rotas protegidas - requerem autenticação */}
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Rotas de admin - requerem autenticação e permissão de admin */}
+            <Route
+              path="/home-admin"
+              element={
+                <AdminRoute>
+                  <HomeAdmin />
+                </AdminRoute>
+              }
+            />
+
+            {/* Rota de erro */}
+            <Route path="/error" element={<ErrorPage />} />
+            <Route path="*" element={<ErrorPage />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
