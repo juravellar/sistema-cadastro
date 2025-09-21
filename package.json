@@ -10,7 +10,9 @@
     "build:frontend": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm start",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "deploy:prepare": "npm run build && npm run start"
+    "deploy:prepare": "npm run build && npm run start",
+    "vercel-build": "cd frontend && npm install && npm run build",
+    "vercel-dev": "cd backend && npm run dev"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
