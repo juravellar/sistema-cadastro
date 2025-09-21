@@ -57,6 +57,7 @@ app.use("/home", homeRouter);
 app.use("/home-admin", homeAdminRouter);
 app.use("/api", apiRouter);
 
+// Initialize database asynchronously without blocking app startup
 (async () => {
   try {
     await createDatabase();
@@ -91,6 +92,10 @@ app.use("/api", apiRouter);
     console.error("Erro ao sincronizar o banco:", err);
     console.error(
       "Verifique se o PostgreSQL está rodando e as credenciais estão corretas."
+    );
+    // Don't exit the process, let the app start anyway
+    console.log(
+      "Aplicação iniciará sem conexão com o banco. Tente novamente mais tarde."
     );
   }
 })();

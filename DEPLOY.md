@@ -86,6 +86,25 @@ docker build -t sistema-cadastro .
 - **Banco**: PostgreSQL
 - **Sessões**: Express-session com cookies seguros
 
+## 🔍 Healthcheck
+
+O sistema possui dois endpoints de healthcheck:
+
+- **`/api`** - Endpoint básico (sempre responde)
+- **`/api/health`** - Endpoint completo (testa conexão com banco)
+
+### Configuração de Healthcheck
+
+**Railway:**
+
+- Path: `/api/health`
+- Timeout: 300s
+
+**Render:**
+
+- Path: `/api/health`
+- Timeout: padrão
+
 ## ⚠️ Notas Importantes
 
 1. **Não inclua arquivos .env** no repositório
@@ -93,3 +112,5 @@ docker build -t sistema-cadastro .
 3. **SESSION_SECRET** deve ser único e seguro
 4. **CORS** está configurado para produção
 5. **Cookies** são seguros em HTTPS
+6. **Banco de dados** é inicializado de forma assíncrona
+7. **Aplicação inicia** mesmo se o banco não estiver disponível

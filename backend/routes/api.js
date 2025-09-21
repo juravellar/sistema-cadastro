@@ -6,7 +6,33 @@ const ensureAdminAuthenticated = require("../middlewares/admin-auth");
 
 // API root
 router.get("/", function (req, res) {
-  res.json({ message: "API endpoint" });
+  res.json({
+    message: "API endpoint",
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Health check endpoint
+router.get("/health", async function (req, res) {
+  try {
+    // Test database connection
+    const { sequelize } = require("../models");
+    await sequelize.authenticate();
+
+    res.json({
+      status: "healthy",
+      database: "connected",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: "unhealthy",
+      database: "disconnected",
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // API signup
