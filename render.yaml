@@ -1,0 +1,49 @@
+services:
+  # Backend Service
+  - type: web
+    name: sistema-cadastro-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase:
+          name: sistema-cadastro-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: sistema-cadastro-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: sistema-cadastro-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: sistema-cadastro-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: sistema-cadastro-db
+          property: password
+
+  # Frontend Service
+  - type: web
+    name: sistema-cadastro-frontend
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+databases:
+  - name: sistema-cadastro-db
+    plan: free
+    databaseName: sistema_cadastro

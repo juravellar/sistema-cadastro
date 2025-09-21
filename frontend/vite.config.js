@@ -34,4 +34,11 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
+    sourcemap: false,
+    minify: "terser",
+  },
+  base: process.env.NODE_ENV === "production" ? "/" : "/",
 });
