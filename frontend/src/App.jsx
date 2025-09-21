@@ -1,12 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
+import Login from "./pages/components/Login";
+import SignUp from "./pages/components/SignUp";
 import Home from "./pages/Home";
 import HomeAdmin from "./pages/HomeAdmin";
-import ErrorPage from "./pages/ErrorPage";
+import ErrorPage from "./pages/components/ErrorPage";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./App.css";
+import "./assets/App.css";
 
 function App() {
   return (

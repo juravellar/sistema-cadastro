@@ -215,7 +215,7 @@ function HomeAdmin() {
 
         <button
           type="button"
-          className="btn btn-primary mb-2 mt-3"
+          className="btn btn-primary"
           onClick={handleLogout}
         >
           Sair

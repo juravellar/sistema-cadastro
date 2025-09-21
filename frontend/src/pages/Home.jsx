@@ -66,7 +66,7 @@ function Home() {
         <h1>Bem-vindo, {user?.username || user?.email}!</h1>
         <button
           type="button"
-          className="btn btn-primary mb-2"
+          className="btn btn-primary"
           onClick={handleLogout}
         >
           Sair
