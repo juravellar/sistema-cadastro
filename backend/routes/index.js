@@ -3,7 +3,7 @@ var router = express.Router();
 const { User } = require("../models");
 const bcrypt = require("bcrypt");
 
-/* GET login/sign-up page */
+/* GET login/signup page */
 router.get("/", function (req, res) {
   res.render("index");
 });
@@ -32,8 +32,8 @@ router.post("/login", async function (req, res) {
   }
 });
 
-/* POST sign-up */
-router.post("/sign-up", async function (req, res) {
+/* POST signup */
+router.post("/signup", async function (req, res) {
   const { username, email, password } = req.body;
 
   try {

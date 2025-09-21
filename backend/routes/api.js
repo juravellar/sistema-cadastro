@@ -9,8 +9,8 @@ router.get("/", function (req, res) {
   res.json({ message: "API endpoint" });
 });
 
-// API sign-up
-router.post("/sign-up", async function (req, res) {
+// API signup
+router.post("/signup", async function (req, res) {
   const { username, email, password } = req.body;
 
   try {
@@ -41,7 +41,7 @@ router.post("/sign-up", async function (req, res) {
         username: newUser.username,
         email: newUser.email,
       },
-      redirectTo: newUser.email.includes("@admin") ? "/home-admin" : "/home",
+      redirectTo: newUser.email.includes("@admin") ? "/admin" : "/home",
     });
   } catch (err) {
     console.error(err);
@@ -65,7 +65,7 @@ router.post("/login", async function (req, res) {
       return res.json({
         success: true,
         user: { id: user.id, username: user.username, email: user.email },
-        redirectTo: user.email.includes("@admin") ? "/home-admin" : "/home",
+        redirectTo: user.email.includes("@admin") ? "/admin" : "/home",
       });
     }
     res.status(401).json({ success: false, message: "Credenciais inválidas" });
@@ -80,6 +80,17 @@ router.post("/logout", function (req, res) {
   req.session.destroy(() => {
     res.json({ success: true, message: "Logout realizado" });
   });
+});
+
+// API get user profile
+router.get("/user/profile", function (req, res) {
+  if (req.session.user) {
+    res.json({ success: true, user: req.session.user });
+  } else {
+    res
+      .status(401)
+      .json({ success: false, message: "Usuário não autenticado" });
+  }
 });
 
 // API get users
