@@ -10,6 +10,14 @@ const {
   NODE_ENV,
 } = process.env;
 
+console.log("🔍 Database Configuration Debug:");
+console.log("DATABASE_URL:", DATABASE_URL ? "SET" : "NOT SET");
+console.log("PGHOST:", PGHOST || "localhost (default)");
+console.log("PGPORT:", PGPORT || "5432 (default)");
+console.log("PGUSER:", PGUSER || "postgres (default)");
+console.log("PGDATABASE:", PGDATABASE || "sistema-cadastro (default)");
+console.log("NODE_ENV:", NODE_ENV || "development (default)");
+
 const useUrl = !!DATABASE_URL;
 
 const sequelize = useUrl

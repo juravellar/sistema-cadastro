@@ -18,6 +18,11 @@ const {
 } = process.env;
 
 async function createDatabase() {
+  console.log("🔍 Database Creation Debug:");
+  console.log("DATABASE_URL:", DATABASE_URL ? "SET" : "NOT SET");
+  console.log("PGHOST:", PGHOST || "localhost (default)");
+  console.log("PGPORT:", PGPORT || "5432 (default)");
+
   if (DATABASE_URL) {
     console.log("ℹ️  Usando DATABASE_URL - pulando criação de banco");
     return;
