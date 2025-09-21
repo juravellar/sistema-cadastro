@@ -38,11 +38,7 @@ COPY --from=frontend-builder /app/frontend/dist ./backend/public/
 # Expose port
 EXPOSE 3000
 
-# Set environment variables from .env file if present
-# (You may want to copy the .env file if your app depends on it)
-COPY .env .env
-
-# Set NODE_ENV to production by default, but .env can override
+# Set environment variables
 ENV NODE_ENV=production
 
 # Start the application

@@ -3,14 +3,11 @@ npm-debug.log
 .git
 .gitignore
 README.md
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*
 .DS_Store
 *.log
 frontend/node_modules
 backend/node_modules
 frontend/dist
 backend/public
+*.md
