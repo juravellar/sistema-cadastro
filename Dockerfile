@@ -1,32 +1,48 @@
-# Use Node.js 18 LTS
-FROM node:18-alpine
+# Multi-stage build
+# Stage 1: Build frontend
+FROM node:18-alpine AS frontend-builder
 
-# Set working directory
-WORKDIR /app
+WORKDIR /app/frontend
 
-# Copy package files
-COPY package*.json ./
-COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
+# Copy frontend package files
+COPY frontend/package*.json ./
 
-# Install dependencies
+# Install frontend dependencies
 RUN npm install
-RUN cd backend && npm install --omit=dev
-RUN cd frontend && npm install --omit=dev
 
-# Copy source code
-COPY . .
+# Copy frontend source code
+COPY frontend/ .
 
 # Build frontend
-RUN cd frontend && npm run build
+RUN npm run build
 
-# Copy built frontend to backend public directory
-RUN cp -r frontend/dist/* backend/public/
+# Stage 2: Build backend and copy frontend
+FROM node:18-alpine AS backend-builder
+
+WORKDIR /app
+
+# Copy backend package files
+COPY backend/package*.json ./backend/
+COPY package*.json ./
+
+# Install backend dependencies
+RUN cd backend && npm install --omit=dev
+RUN npm install
+
+# Copy backend source code
+COPY backend/ ./backend/
+
+# Copy built frontend from previous stage
+COPY --from=frontend-builder /app/frontend/dist ./backend/public/
 
 # Expose port
 EXPOSE 3000
 
-# Set environment variables
+# Set environment variables from .env file if present
+# (You may want to copy the .env file if your app depends on it)
+COPY .env .env
+
+# Set NODE_ENV to production by default, but .env can override
 ENV NODE_ENV=production
 
 # Start the application
