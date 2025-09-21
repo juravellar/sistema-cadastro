@@ -13,7 +13,6 @@ export default defineConfig({
         secure: false,
         configure: (proxy, _options) => {
           proxy.on("proxyReq", (proxyReq, req, _res) => {
-            // Forward cookies from the original request
             if (req.headers.cookie) {
               proxyReq.setHeader("cookie", req.headers.cookie);
             }

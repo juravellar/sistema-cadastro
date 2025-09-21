@@ -9,25 +9,21 @@ function Index() {
   const navigate = useNavigate();
   const { login, signup } = useAuth();
 
-  // Estados para Login
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginErrors, setLoginErrors] = useState({});
 
-  // Estados para SignUp
   const [signupUsername, setSignupUsername] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [signupErrors, setSignupErrors] = useState({});
 
-  // Função para validar email
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Função para limpar erros
   const clearErrors = () => {
     setError("");
     setLoginErrors({});
@@ -40,7 +36,6 @@ function Index() {
     setError("");
     setLoginErrors({});
 
-    // Validação de campos obrigatórios
     const errors = {};
 
     if (!loginEmail.trim()) {
@@ -81,7 +76,6 @@ function Index() {
     setError("");
     setSignupErrors({});
 
-    // Validação de campos obrigatórios
     const errors = {};
 
     if (!signupUsername.trim()) {

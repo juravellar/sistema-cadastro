@@ -15,7 +15,6 @@ function SignUp() {
     setIsLoading(true);
     setError("");
 
-    // Validação de senha
     if (password !== confirmPassword) {
       setError("As senhas não coincidem");
       setIsLoading(false);

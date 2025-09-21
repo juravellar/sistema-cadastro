@@ -88,21 +88,23 @@ docker build -t sistema-cadastro .
 
 ## 🔍 Healthcheck
 
-O sistema possui dois endpoints de healthcheck:
+O sistema possui múltiplos endpoints de healthcheck:
 
-- **`/api`** - Endpoint básico (sempre responde)
-- **`/api/health`** - Endpoint completo (testa conexão com banco)
+- **`/status`** - Endpoint básico (sempre responde, recomendado para healthcheck)
+- **`/api`** - Endpoint da API (sempre responde)
+- **`/api/health`** - Endpoint simples da API (sempre responde)
+- **`/api/health/detailed`** - Endpoint completo (testa conexão com banco)
 
 ### Configuração de Healthcheck
 
 **Railway:**
 
-- Path: `/api/health`
+- Path: `/status`
 - Timeout: 300s
 
 **Render:**
 
-- Path: `/api/health`
+- Path: `/status`
 - Timeout: padrão
 
 ## ⚠️ Notas Importantes

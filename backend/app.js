@@ -19,7 +19,6 @@ const app = express();
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
-// Configuração de CORS para produção
 app.use(
   cors({
     origin:
@@ -38,6 +37,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "segredo-dev",
@@ -52,12 +56,19 @@ app.use(
   })
 );
 
+app.get("/status", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use("/", indexRouter);
 app.use("/home", homeRouter);
 app.use("/home-admin", homeAdminRouter);
 app.use("/api", apiRouter);
 
-// Initialize database asynchronously without blocking app startup
 (async () => {
   try {
     await createDatabase();
@@ -93,7 +104,6 @@ app.use("/api", apiRouter);
     console.error(
       "Verifique se o PostgreSQL está rodando e as credenciais estão corretas."
     );
-    // Don't exit the process, let the app start anyway
     console.log(
       "Aplicação iniciará sem conexão com o banco. Tente novamente mais tarde."
     );

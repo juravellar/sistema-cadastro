@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Verificar autenticação ao carregar a aplicação
   useEffect(() => {
     checkAuth();
   }, []);
