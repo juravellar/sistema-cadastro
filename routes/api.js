@@ -4,12 +4,10 @@ const { User } = require("../models");
 const bcrypt = require("bcrypt");
 const ensureAdminAuthenticated = require("../middlewares/admin-auth");
 
-// API root
 router.get("/", function (req, res) {
   res.json({ message: "API endpoint" });
 });
 
-// API sign-up
 router.post("/sign-up", async function (req, res) {
   const { username, email, password } = req.body;
 
@@ -49,7 +47,6 @@ router.post("/sign-up", async function (req, res) {
   }
 });
 
-// API login
 router.post("/login", async function (req, res) {
   const { email, password } = req.body;
 
@@ -75,14 +72,12 @@ router.post("/login", async function (req, res) {
   }
 });
 
-// API logout
 router.post("/logout", function (req, res) {
   req.session.destroy(() => {
     res.json({ success: true, message: "Logout realizado" });
   });
 });
 
-// API get users
 router.get("/users", ensureAdminAuthenticated, async function (req, res) {
   try {
     const users = await User.findAll({
@@ -97,7 +92,6 @@ router.get("/users", ensureAdminAuthenticated, async function (req, res) {
   }
 });
 
-// API get user by id
 router.get("/user/id/:id", ensureAdminAuthenticated, async function (req, res) {
   const { id } = req.params;
 
@@ -130,7 +124,6 @@ router.get("/user/id/:id", ensureAdminAuthenticated, async function (req, res) {
   }
 });
 
-// API update user by id
 router.put("/user/id/:id", ensureAdminAuthenticated, async function (req, res) {
   const { id } = req.params;
   const { username, email, password } = req.body;
@@ -191,7 +184,6 @@ router.put("/user/id/:id", ensureAdminAuthenticated, async function (req, res) {
   }
 });
 
-// API delete user by id
 router.delete(
   "/user/id/:id",
   ensureAdminAuthenticated,
