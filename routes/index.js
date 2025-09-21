@@ -20,7 +20,7 @@ router.post("/login", async function (req, res) {
         username: user.username,
         email: user.email,
       };
-      if (user.email === "admin@admin.com") {
+      if (user.email.includes("@admin")) {
         return res.redirect("/home-admin");
       }
       return res.redirect("/home");
@@ -55,8 +55,8 @@ router.post("/sign-up", async function (req, res) {
       username: newUser.username,
       email: newUser.email,
     };
-    // Redireciona admin para home-admin, outros usuários para home
-    if (newUser.email === "admin@admin.com") {
+
+    if (newUser.email.includes("@admin")) {
       return res.redirect("/home-admin");
     }
     return res.redirect("/home");

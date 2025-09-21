@@ -1,5 +1,5 @@
 function ensureAdminAuthenticated(req, res, next) {
-  if (req.session.user && req.session.user.email === "admin@admin.com") {
+  if (req.session.user && req.session.user.email.includes("@admin")) {
     return next();
   }
   res.status(401).send(`
