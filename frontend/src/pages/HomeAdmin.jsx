@@ -224,7 +224,6 @@ function HomeAdmin() {
         </div>
       </div>
 
-      {/* Modal de Edição */}
       {isModalOpen && (
         <div
           className="modal show d-block"
@@ -305,7 +304,6 @@ function HomeAdmin() {
         </div>
       )}
 
-      {/* Modal de Exclusão */}
       {isDeleteModalOpen && (
         <div
           className="modal show d-block"
