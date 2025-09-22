@@ -16,20 +16,29 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
+          .then(async (response) => {
+            const data = await response.json();
+            if (response.ok && data.success) {
               window.location.href = data.redirectTo || "/home";
             } else {
-              const toast = new bootstrap.Toast(
+              let errorMessage = data.message || "Erro ao fazer login!";
+              if (response.status === 404) errorMessage = "Email não cadastrado";
+              else if (response.status === 401) errorMessage = "Senha incorreta";
+        
+              const toastEl =
                 document.getElementById("errorToast") ||
-                  createToast(
-                    data.message || "Credenciais inválidas!",
-                    "danger"
-                  )
-              );
+                createToast(errorMessage, "danger");
+              const toast = new bootstrap.Toast(toastEl);
               toast.show();
             }
+          })
+          .catch((error) => {
+            console.error("Erro:", error);
+            const toast = new bootstrap.Toast(
+              document.getElementById("errorToast") ||
+                createToast("Erro ao fazer login!", "danger")
+            );
+            toast.show();
           })
           .catch((error) => {
             console.error("Erro:", error);

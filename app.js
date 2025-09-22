@@ -9,7 +9,6 @@ require("dotenv").config();
 const indexRouter = require("./routes/index");
 const homeRouter = require("./routes/home");
 const homeAdminRouter = require("./routes/home-admin");
-const apiRouter = require("./routes/api");
 const { sequelize } = require("./models");
 const createDatabase = require("./scripts/create-database");
 
@@ -36,7 +35,7 @@ app.use(
 app.use("/", indexRouter);
 app.use("/home", homeRouter);
 app.use("/home-admin", homeAdminRouter);
-app.use("/api", apiRouter);
+app.use("/api", indexRouter);
 
 (async () => {
   try {
