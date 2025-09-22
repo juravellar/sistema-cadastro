@@ -5,7 +5,9 @@ const bcrypt = require("bcrypt");
 
 /* GET login/signup page */
 router.get("/", function (req, res) {
-  res.render("index");
+  res.json({
+    message: "API funcionando. Use o frontend para acessar a interface.",
+  });
 });
 
 /* POST login */
@@ -21,9 +23,19 @@ router.post("/login", async function (req, res) {
         email: user.email,
       };
       if (user.email.includes("@admin")) {
-        return res.redirect("/home-admin");
+        return res.json({
+          success: true,
+          message: "Login realizado com sucesso",
+          user: req.session.user,
+          redirectTo: "/home-admin",
+        });
       }
-      return res.redirect("/home");
+      return res.json({
+        success: true,
+        message: "Login realizado com sucesso",
+        user: req.session.user,
+        redirectTo: "/home",
+      });
     }
     res.status(401).send("Credenciais inválidas");
   } catch (err) {
@@ -57,9 +69,19 @@ router.post("/signup", async function (req, res) {
     };
 
     if (newUser.email.includes("@admin")) {
-      return res.redirect("/home-admin");
+      return res.json({
+        success: true,
+        message: "Usuário criado com sucesso",
+        user: req.session.user,
+        redirectTo: "/home-admin",
+      });
     }
-    return res.redirect("/home");
+    return res.json({
+      success: true,
+      message: "Usuário criado com sucesso",
+      user: req.session.user,
+      redirectTo: "/home",
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Erro ao criar usuário");
@@ -69,7 +91,7 @@ router.post("/signup", async function (req, res) {
 /* POST logout */
 router.post("/logout", function (req, res) {
   req.session.destroy(() => {
-    res.redirect("/");
+    res.json({ success: true, message: "Logout realizado com sucesso" });
   });
 });
 

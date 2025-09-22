@@ -4,7 +4,11 @@ const ensureAdminAuthenticated = require("../middlewares/admin-auth");
 
 /* GET home admin page */
 router.get("/", ensureAdminAuthenticated, function (req, res) {
-  res.render("home-admin", { user: req.session.user });
+  res.json({
+    success: true,
+    message: "Acesso de administrador autorizado",
+    user: req.session.user,
+  });
 });
 
 module.exports = router;
