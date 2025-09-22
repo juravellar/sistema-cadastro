@@ -16,20 +16,39 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
+          .then(async (response) => {
+            const data = await response.json();
+            if (response.ok && data.success) {
               window.location.href = data.redirectTo || "/home";
             } else {
-              const toast = new bootstrap.Toast(
+              let errorMessage = data.message || "Erro ao fazer login!";
+              if (response.status === 404)
+                errorMessage = "Email não cadastrado";
+              else if (response.status === 401)
+                errorMessage = "Senha incorreta";
+
+              const toastEl =
                 document.getElementById("errorToast") ||
-                  createToast(
-                    data.message || "Credenciais inválidas!",
-                    "danger"
-                  )
-              );
+                createToast(errorMessage, "danger");
+              const toast = new bootstrap.Toast(toastEl);
               toast.show();
             }
+          })
+          .catch((error) => {
+            console.error("Erro:", error);
+            const toast = new bootstrap.Toast(
+              document.getElementById("errorToast") ||
+                createToast("Erro ao fazer login!", "danger")
+            );
+            toast.show();
+          })
+          .catch((error) => {
+            console.error("Erro:", error);
+            const toast = new bootstrap.Toast(
+              document.getElementById("errorToast") ||
+                createToast("Erro ao fazer login!", "danger")
+            );
+            toast.show();
           })
           .catch((error) => {
             console.error("Erro:", error);
@@ -45,14 +64,14 @@
     });
   }
 
-  const signupForm = document.getElementById("signup-form");
+  const signupForm = document.getElementById("sign-up-form");
   if (signupForm) {
     signupForm.addEventListener("submit", function (event) {
       event.preventDefault();
       event.stopPropagation();
 
-      const password = document.getElementById("signup-password");
-      const confirmPassword = document.getElementById("signup-confirm");
+      const password = document.getElementById("sign-up-password");
+      const confirmPassword = document.getElementById("sign-up-confirm");
 
       if (password.value !== confirmPassword.value) {
         confirmPassword.setCustomValidity("As senhas não coincidem");
@@ -61,11 +80,11 @@
       }
 
       if (signupForm.checkValidity()) {
-        const username = document.getElementById("signup-username").value;
-        const email = document.getElementById("signup-email").value;
+        const username = document.getElementById("sign-up-username").value;
+        const email = document.getElementById("sign-up-email").value;
         const passwordValue = password.value;
 
-        fetch("/api/signup", {
+        fetch("/api/sign-up", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, email, password: passwordValue }),
@@ -96,9 +115,9 @@
     });
 
     document
-      .getElementById("signup-confirm")
+      .getElementById("sign-up-confirm")
       .addEventListener("input", function () {
-        const password = document.getElementById("signup-password");
+        const password = document.getElementById("sign-up-password");
         const confirmPassword = this;
 
         if (password.value !== confirmPassword.value) {
