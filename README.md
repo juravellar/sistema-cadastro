@@ -26,7 +26,21 @@ sistema-cadastro/
 
 ## Como executar
 
-### Backend (Express.js)
+### 🚀 Método Rápido (Recomendado)
+
+Execute tudo de uma vez na raiz do projeto:
+
+```bash
+# Instalar todas as dependências
+npm run install:all
+
+# Executar backend e frontend simultaneamente
+npm run dev
+```
+
+### 📋 Método Manual
+
+#### Backend (Express.js)
 
 1. Navegue para a pasta backend:
 
@@ -58,7 +72,7 @@ sistema-cadastro/
 
 O backend estará disponível em `http://localhost:3000`
 
-### Frontend (React)
+#### Frontend (React)
 
 1. Navegue para a pasta frontend:
 
@@ -78,6 +92,29 @@ O backend estará disponível em `http://localhost:3000`
    ```
 
 O frontend estará disponível em `http://localhost:5173`
+
+## 📚 Comandos Disponíveis
+
+Execute na raiz do projeto:
+
+```bash
+# Desenvolvimento
+npm run dev              # Executa backend e frontend simultaneamente
+npm run dev:backend      # Executa apenas o backend
+npm run dev:frontend     # Executa apenas o frontend
+
+# Instalação
+npm run install:all      # Instala dependências de backend e frontend
+npm run install:backend  # Instala apenas dependências do backend
+npm run install:frontend # Instala apenas dependências do frontend
+
+# Build e produção
+npm run build            # Gera build de produção do frontend
+npm start                # Executa o backend em modo produção
+
+# Limpeza
+npm run clean            # Remove node_modules e builds
+```
 
 ## Configuração
 
