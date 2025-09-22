@@ -64,14 +64,14 @@
     });
   }
 
-  const signupForm = document.getElementById("sign-up-form");
+  const signupForm = document.getElementById("signup-form");
   if (signupForm) {
     signupForm.addEventListener("submit", function (event) {
       event.preventDefault();
       event.stopPropagation();
 
-      const password = document.getElementById("sign-up-password");
-      const confirmPassword = document.getElementById("sign-up-confirm");
+      const password = document.getElementById("signup-password");
+      const confirmPassword = document.getElementById("signup-confirm");
 
       if (password.value !== confirmPassword.value) {
         confirmPassword.setCustomValidity("As senhas não coincidem");
@@ -80,11 +80,11 @@
       }
 
       if (signupForm.checkValidity()) {
-        const username = document.getElementById("sign-up-username").value;
-        const email = document.getElementById("sign-up-email").value;
+        const username = document.getElementById("signup-username").value;
+        const email = document.getElementById("signup-email").value;
         const passwordValue = password.value;
 
-        fetch("/api/sign-up", {
+        fetch("/api/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, email, password: passwordValue }),
@@ -115,9 +115,9 @@
     });
 
     document
-      .getElementById("sign-up-confirm")
+      .getElementById("signup-confirm")
       .addEventListener("input", function () {
-        const password = document.getElementById("sign-up-password");
+        const password = document.getElementById("signup-password");
         const confirmPassword = this;
 
         if (password.value !== confirmPassword.value) {
