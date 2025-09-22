@@ -49,23 +49,29 @@ router.post("/signup", async function (req, res) {
 
 router.post("/login", async function (req, res) {
   const { email, password } = req.body;
-
   try {
     const user = await User.findOne({ where: { email } });
-
-    if (user && (await bcrypt.compare(password, user.password))) {
-      req.session.user = {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-      };
-      return res.json({
-        success: true,
-        user: { id: user.id, username: user.username, email: user.email },
-        redirectTo: user.email.includes("@admin") ? "/home-admin" : "/home",
-      });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Email não cadastrado" });
     }
-    res.status(401).json({ success: false, message: "Credenciais inválidas" });
+    const senhaCorreta = await bcrypt.compare(password, user.password);
+    if (!senhaCorreta) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Senha incorreta" });
+    }
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    };
+    return res.json({
+      success: true,
+      user: { id: user.id, username: user.username, email: user.email },
+      redirectTo: user.email.includes("@admin") ? "/home-admin" : "/home",
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Erro no servidor" });
