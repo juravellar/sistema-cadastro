@@ -79,6 +79,56 @@ O backend estará disponível em `http://localhost:3000`
 
 O frontend estará disponível em `http://localhost:5173`
 
+## 🚀 Deploy no Vercel
+
+### Configuração Automática
+
+1. **Conecte seu repositório GitHub ao Vercel**
+2. **Configure as variáveis de ambiente no Vercel:**
+
+   ```
+   NODE_ENV=production
+   DB_HOST=seu_host_postgresql
+   DB_PORT=5432
+   DB_NAME=sistema_cadastro
+   DB_USER=seu_usuario
+   DB_PASSWORD=sua_senha
+   SESSION_SECRET=seu_segredo_sessao
+   ```
+
+3. **Deploy automático** - O Vercel detectará automaticamente:
+   - **Frontend**: Build do React na pasta `frontend/`
+   - **Backend**: API Node.js na pasta `backend/`
+
+### Configuração Manual
+
+Se precisar configurar manualmente no Vercel:
+
+- **Framework Preset**: Vite
+- **Root Directory**: `./`
+- **Build Command**: `npm run vercel-build`
+- **Output Directory**: `frontend/dist`
+- **Install Command**: `npm run install:all`
+
+## 📚 Comandos Disponíveis
+
+Execute na raiz do projeto:
+
+```bash
+# Desenvolvimento
+npm run dev              # Executa backend e frontend simultaneamente
+npm run dev:backend      # Executa apenas o backend
+npm run dev:frontend     # Executa apenas o frontend
+
+# Build e Deploy
+npm run build            # Build do frontend para produção
+npm run vercel-build     # Build específico para Vercel
+npm run install:all      # Instala todas as dependências
+
+# Produção
+npm start                # Executa o backend em modo produção
+```
+
 ## Configuração
 
 - O frontend está configurado para fazer proxy das requisições `/api/*` para o backend em `http://localhost:3000`
