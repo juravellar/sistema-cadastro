@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const ensureAdminAuthenticated = require("../middlewares/admin-auth");
 
 router.get("/", function (req, res) {
-  res.json({ message: "API endpoint" });
+  res.json({ message: "Back-end endpoint" });
 });
 
 router.post("/signup", async function (req, res) {
