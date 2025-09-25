@@ -10,12 +10,12 @@ require("dotenv").config();
 const indexRouter = require("./routes/index");
 const homeRouter = require("./routes/home");
 const homeAdminRouter = require("./routes/home-admin");
-const apiRouter = require("./routes/api");
 const { sequelize } = require("./models");
 const createDatabase = require("./scripts/create-database");
 
 const app = express();
 
+<<<<<<< HEAD
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
@@ -31,6 +31,8 @@ app.use(
   })
 );
 
+=======
+>>>>>>> react-node.js
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -67,7 +69,7 @@ app.get("/status", (req, res) => {
 app.use("/", indexRouter);
 app.use("/home", homeRouter);
 app.use("/home-admin", homeAdminRouter);
-app.use("/api", apiRouter);
+app.use("/api", indexRouter);
 
 (async () => {
   try {
@@ -118,10 +120,14 @@ app.use(function (req, res, next) {
 });
 
 app.use(function (err, req, res, next) {
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
   res.status(err.status || 500);
-  res.render("error");
+  res.json({
+    error: {
+      message: err.message,
+      status: err.status || 500,
+      ...(req.app.get("env") === "development" && { stack: err.stack }),
+    },
+  });
 });
 
 module.exports = app;

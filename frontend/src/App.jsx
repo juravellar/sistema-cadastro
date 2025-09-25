@@ -18,7 +18,6 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
-            {/* Rotas públicas - redirecionam se já autenticado */}
             <Route
               path="/"
               element={
@@ -28,7 +27,6 @@ function App() {
               }
             />
 
-            {/* Rotas protegidas - requerem autenticação */}
             <Route
               path="/home"
               element={
@@ -38,7 +36,6 @@ function App() {
               }
             />
 
-            {/* Rotas de admin - requerem autenticação e permissão de admin */}
             <Route
               path="/home-admin"
               element={
@@ -48,7 +45,6 @@ function App() {
               }
             />
 
-            {/* Rota de erro */}
             <Route path="/error" element={<ErrorPage />} />
             <Route path="*" element={<ErrorPage />} />
           </Routes>

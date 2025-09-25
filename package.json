@@ -1,11 +1,19 @@
 {
+<<<<<<< HEAD
   "name": "sistema-cadastro-fullstack",
   "version": "1.0.0",
   "description": "Sistema completo de cadastro com frontend React e backend Express.js",
+=======
+  "name": "sistema-cadastro",
+  "version": "1.0.0",
+  "description": "Sistema de cadastro com React frontend e Express backend",
+  "private": true,
+>>>>>>> react-node.js
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
+<<<<<<< HEAD
     "build": "npm run build:frontend",
     "build:frontend": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm start",
@@ -19,4 +27,26 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   }
+=======
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "clean": "rimraf backend/node_modules frontend/node_modules backend/dist frontend/dist"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5"
+  },
+  "keywords": [
+    "react",
+    "express",
+    "nodejs",
+    "postgresql",
+    "authentication"
+  ],
+  "author": "",
+  "license": "ISC"
+>>>>>>> react-node.js
 }
