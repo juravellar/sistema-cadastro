@@ -8,7 +8,7 @@ export default defineConfig({
     port: process.env.VITE_PORT ? Number(process.env.VITE_PORT) : 5173,
     proxy: {
       "/api": {
-        target: process.env.VITE_BACKEND_URL || "http://localhost:3000",
+        target: process.env.VITE_BACKEND_URL || "http://localhost:1",
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
@@ -20,7 +20,7 @@ export default defineConfig({
         },
       },
       "/logout": {
-        target: process.env.VITE_BACKEND_URL || "http://localhost:3000",
+        target: process.env.VITE_BACKEND_URL || "http://localhost:3001",
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
