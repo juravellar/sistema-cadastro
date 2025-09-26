@@ -15,24 +15,37 @@ const createDatabase = require("./scripts/create-database");
 
 const app = express();
 
-<<<<<<< HEAD
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
+// CORS deve vir ANTES do session e permitir apenas o frontend
 app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? [process.env.FRONTEND_URL, process.env.BACKEND_URL]
-        : ["http://localhost:5173", "http://localhost:3000"],
+        ? process.env.FRONTEND_URL // só o frontend em produção
+        : "http://localhost:5173", // só o Vite em dev
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   })
 );
 
-=======
->>>>>>> react-node.js
+// Session deve vir DEPOIS do CORS
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "segredo-dev",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // true só em produção HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 horas
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // none para cross-site em prod
+    },
+  })
+);
+
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -43,20 +56,6 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
-
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "segredo-dev",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 horas
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    },
-  })
-);
 
 app.get("/status", (req, res) => {
   res.json({
@@ -80,7 +79,7 @@ app.use("/api", indexRouter);
 
     await sequelize.sync({
       force: false,
-      alter: process.env.NODE_ENV === "development",
+      alter: process.env.NODE_ENV === "production",
     });
     console.log("Banco de dados sincronizado com sucesso.");
 

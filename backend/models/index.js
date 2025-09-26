@@ -16,7 +16,7 @@ console.log("PGHOST:", PGHOST || "localhost (default)");
 console.log("PGPORT:", PGPORT || "5432 (default)");
 console.log("PGUSER:", PGUSER || "postgres (default)");
 console.log("PGDATABASE:", PGDATABASE || "sistema-cadastro (default)");
-console.log("NODE_ENV:", NODE_ENV || "development (default)");
+console.log("NODE_ENV:", NODE_ENV || "production (default)");
 
 const useUrl = !!DATABASE_URL;
 
