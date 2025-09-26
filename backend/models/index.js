@@ -26,7 +26,7 @@ const sequelize = useUrl
       logging: false,
       dialectOptions:
         NODE_ENV === "production"
-          ? { ssl: { require: true, rejectUnauthorized: false } }
+          ? { ssl: { require: false } }
           : {},
     })
   : new Sequelize(
