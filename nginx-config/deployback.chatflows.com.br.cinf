@@ -14,8 +14,10 @@ server {
     server_name deployback.chatflows.com.br;
 
     # Configurações SSL (serão preenchidas pelo Let's Encrypt)
-    ssl_certificate /path/to/ssl/cert.pem;
-    ssl_certificate_key /path/to/ssl/private.key;
+    ssl_certificate     /etc/letsencrypt/live/deployback.chatflows.com.br/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/deployback.chatflows.com.br/privkey.pem;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
     
     # Configurações SSL recomendadas
     ssl_protocols TLSv1.2 TLSv1.3;
