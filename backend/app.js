@@ -24,7 +24,7 @@ app.use(
     origin:
       process.env.NODE_ENV === "production"
         ? process.env.FRONTEND_URL // só o frontend em produção
-        : "http://localhost:5173", // só o Vite em dev
+        : "http://localhost.1:5173", // só o Vite em dev
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],

@@ -10,7 +10,7 @@ const { Sequelize } = require("sequelize");
 
 const {
   DATABASE_URL,
-  PGHOST = "localhost",
+  PGHOST = "127.0.0.1",
   PGPORT = 5432,
   PGUSER = "postgres",
   PGPASSWORD = "0000",
@@ -20,7 +20,7 @@ const {
 async function createDatabase() {
   console.log("🔍 Database Creation Debug:");
   console.log("DATABASE_URL:", DATABASE_URL ? "SET" : "NOT SET");
-  console.log("PGHOST:", PGHOST || "localhost (default)");
+  console.log("PGHOST:", PGHOST || "127.0.0.1 (default)");
   console.log("PGPORT:", PGPORT || "5432 (default)");
 
   if (DATABASE_URL) {
