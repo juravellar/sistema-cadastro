@@ -1,16 +1,45 @@
 {
-  "name": "sistema-cadastro",
+  "name": "sistema-cadastro-fullstack",
   "version": "1.0.0",
+  "description": "Sistema completo de cadastro com frontend React e backend Express.js",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
+    "build": "npm run build:frontend",
+    "build:frontend": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm start",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "deploy:aapanel": "bash scripts/deploy-aapanel.sh",
+    "deploy:git": "bash scripts/git-deploy.sh",
+    "setup:git": "bash scripts/setup-git.sh",
+    "pm2:start": "cd backend && pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "cd backend && pm2 stop sistema-cadastro-backend",
+    "pm2:restart": "cd backend && pm2 restart sistema-cadastro-backend",
+    "pm2:logs": "cd backend && pm2 logs sistema-cadastro-backend",
+    "pm2:status": "cd backend && pm2 status",
+    "webhook:start": "pm2 start webhook-ecosystem.config.js",
+    "webhook:stop": "pm2 stop webhook-server",
+    "webhook:restart": "pm2 restart webhook-server",
+    "webhook:logs": "pm2 logs webhook-server",
+    "clean": "rimraf backend/node_modules frontend/node_modules backend/dist frontend/dist"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
-  }
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "react",
+    "express",
+    "nodejs",
+    "postgresql",
+    "authentication"
+  ],
+  "author": "",
+  "license": "ISC"
 }
