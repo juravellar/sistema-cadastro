@@ -133,7 +133,7 @@ npm start                # Executa o backend em modo produção
 
 ## Configuração
 
-- O frontend está configurado para fazer proxy das requisições `/api/*` para o backend em `http://localhost:3001`
+- O frontend está configurado para fazer proxy das requisições `/api/*` para o backend em `http://localhost:5173`
 - Certifique-se de que o backend esteja rodando antes de iniciar o frontend
 - O sistema usa PostgreSQL como banco de dados
 
