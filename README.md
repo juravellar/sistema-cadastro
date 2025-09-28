@@ -4,6 +4,7 @@ Um sistema de cadastro completo com **frontend em React (Vite)** e **backend em 
 O projeto suporta autenticação de usuários e foi estruturado para rodar backend e frontend em paralelo.
 
 <<<<<<< HEAD
+
 ## Estrutura do Projeto
 
 ```
@@ -58,7 +59,7 @@ sistema-cadastro/
    npm run dev
    ```
 
-O backend estará disponível em `http://localhost:3001`
+O backend estará disponível em `http://localhost:3002`
 
 ### Frontend (React)
 
@@ -138,26 +139,31 @@ npm start                # Executa o backend em modo produção
 - O sistema usa PostgreSQL como banco de dados
 
 ## Tecnologias
-=======
----
+
+## =======
+
 ## 🚀 Tecnologias Utilizadas
->>>>>>> react-node.js
+
+> > > > > > > react-node.js
 
 ### Backend
-- [Node.js](https://nodejs.org/)  
-- [Express](https://expressjs.com/)  
-- [Sequelize](https://sequelize.org/) (ORM para PostgreSQL)  
-- [JWT](https://jwt.io/) para autenticação  
+
+- [Node.js](https://nodejs.org/)
+- [Express](https://expressjs.com/)
+- [Sequelize](https://sequelize.org/) (ORM para PostgreSQL)
+- [JWT](https://jwt.io/) para autenticação
 - Middlewares de autenticação
 
 ### Frontend
-- [React](https://reactjs.org/)  
-- [Vite](https://vitejs.dev/) (build e dev server)  
-- [Axios](https://axios-http.com/) para chamadas à API  
+
+- [React](https://reactjs.org/)
+- [Vite](https://vitejs.dev/) (build e dev server)
+- [Axios](https://axios-http.com/) para chamadas à API
 
 ### Outros
-- [PostgreSQL](https://www.postgresql.org/) como banco de dados  
-- [Concurrently](https://www.npmjs.com/package/concurrently) para rodar backend e frontend juntos  
+
+- [PostgreSQL](https://www.postgresql.org/) como banco de dados
+- [Concurrently](https://www.npmjs.com/package/concurrently) para rodar backend e frontend juntos
 - [Rimraf](https://www.npmjs.com/package/rimraf) para limpeza de dependências e builds
 
 ---
@@ -182,17 +188,18 @@ sistema-cadastro/
 ├── package.json      # Scripts para backend + frontend
 └── README.md
 
-````
+```
 
 ---
 
 ## ⚙️ Configuração do Ambiente
 
 ### 1. Clonar o repositório
+
 ```bash
 git clone https://github.com/seu-usuario/sistema-cadastro.git
 cd sistema-cadastro
-````
+```
 
 ### 2. Configurar variáveis de ambiente
 
@@ -212,6 +219,7 @@ DB_PASSWORD=sua_senha
 # JWT
 JWT_SECRET=uma_chave_segura_aqui
 ```
+
 Você pode usar `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` para **gerar uma chave aleatória e segura em hexadecimal**, ideal para **tokens, senhas fortes ou secrets** em aplicações.
 
 ### 3. Instalar dependências
@@ -270,11 +278,11 @@ npm run clean
 
 ## ✨ Funcionalidades
 
-* Cadastro e login de usuários
-* Autenticação com JWT
-* Proteção de rotas com middlewares
-* Integração com banco PostgreSQL
-* Frontend em React para interação com o usuário
+- Cadastro e login de usuários
+- Autenticação com JWT
+- Proteção de rotas com middlewares
+- Integração com banco PostgreSQL
+- Frontend em React para interação com o usuário
 
 ---
 
