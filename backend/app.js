@@ -15,33 +15,37 @@ const createDatabase = require("./scripts/create-database");
 
 const app = express();
 
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs");
-
-// CORS deve vir ANTES do session e permitir apenas o frontend
+// Configuração CORS para permitir credenciais
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL // só o frontend em produção
-        : "http://localhost.1:5173", // só o Vite em dev
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// Session deve vir DEPOIS do CORS
+app.use(logger("dev"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "public")));
+
+// Configuração de sessão melhorada
+const isProduction = process.env.NODE_ENV === "production";
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "segredo-dev",
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true, // Mudado para true para garantir que sessões sejam criadas
+    name: "connect.sid", // Nome explícito do cookie
     cookie: {
-      secure: process.env.NODE_ENV === "production", // true só em produção HTTPS
-      httpOnly: true,
+      secure: false, // Sempre false em desenvolvimento (mesmo que seja produção local)
+      httpOnly: true, // Previne acesso via JavaScript (segurança)
+      sameSite: "lax", // "lax" funciona melhor em desenvolvimento com proxy
       maxAge: 24 * 60 * 60 * 1000, // 24 horas
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // none para cross-site em prod
+      path: "/", // Path explícito para garantir que funcione em todas as rotas
+      domain: undefined, // Deixa o navegador decidir o domínio
     },
   })
 );

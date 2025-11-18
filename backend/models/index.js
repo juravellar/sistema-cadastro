@@ -24,14 +24,16 @@ console.log("DATABASE_SSL:", DATABASE_SSL === "true" ? "true" : "false");
 
 const useUrl = !!DATABASE_URL;
 
+// Determina se deve usar SSL baseado na variável DATABASE_SSL ou NODE_ENV
+const useSSL = DATABASE_SSL === "true" || NODE_ENV === "production";
+
 const sequelize = useUrl
   ? new Sequelize(DATABASE_URL, {
       dialect: "postgres",
       logging: false,
-      dialectOptions:
-        DATABASE_SSL === "true"
-          ? { ssl: { require: true, rejectUnauthorized: false } }
-          : {},
+      dialectOptions: useSSL
+        ? { ssl: { require: true, rejectUnauthorized: false } }
+        : { ssl: false },
     })
   : new Sequelize(
       PGDATABASE || "sistema-cadastro",
@@ -42,6 +44,9 @@ const sequelize = useUrl
         port: PGPORT ? Number(PGPORT) : 5432,
         dialect: "postgres",
         logging: false,
+        dialectOptions: useSSL
+          ? { ssl: { require: true, rejectUnauthorized: false } }
+          : { ssl: false },
       }
     );
 

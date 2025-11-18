@@ -49,6 +49,14 @@ router.post("/signup", async function (req, res) {
 
 router.post("/login", async function (req, res) {
   const { email, password } = req.body;
+
+  // Validação básica
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email e senha são obrigatórios" });
+  }
+
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
@@ -62,19 +70,65 @@ router.post("/login", async function (req, res) {
         .status(401)
         .json({ success: false, message: "Senha incorreta" });
     }
+    // Define o usuário na sessão
     req.session.user = {
       id: user.id,
       username: user.username,
       email: user.email,
     };
-    return res.json({
-      success: true,
-      user: { id: user.id, username: user.username, email: user.email },
-      redirectTo: user.email.includes("@admin") ? "/home-admin" : "/home",
+
+    // Debug em desenvolvimento
+    if (process.env.NODE_ENV === "development") {
+      console.log("✅ Login bem-sucedido - Session ID:", req.sessionID);
+      console.log("👤 User salvo na sessão:", req.session.user);
+    }
+
+    // Envia a resposta - express-session salva automaticamente quando a resposta é enviada
+    // Mas vamos garantir que seja salvo explicitamente
+    req.session.save((err) => {
+      if (err) {
+        console.error("❌ Erro ao salvar sessão:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Erro ao criar sessão",
+        });
+      }
+
+      // Debug: verificar headers antes de enviar
+      if (process.env.NODE_ENV === "development") {
+        console.log("💾 Sessão salva. Cookie config:", req.session.cookie);
+      }
+
+      // Envia a resposta JSON
+      res.json({
+        success: true,
+        user: { id: user.id, username: user.username, email: user.email },
+        redirectTo: user.email.includes("@admin") ? "/home-admin" : "/home",
+      });
+
+      // Debug após enviar resposta
+      if (process.env.NODE_ENV === "development") {
+        res.on("finish", () => {
+          const headers = res.getHeaders();
+          console.log("📤 Headers enviados:", Object.keys(headers));
+          if (headers["set-cookie"]) {
+            console.log("🍪 Cookie enviado:", headers["set-cookie"]);
+          } else {
+            console.warn("⚠️ NENHUM COOKIE FOI ENVIADO NA RESPOSTA!");
+          }
+        });
+      }
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Erro no servidor" });
+    console.error("Erro no login:", err);
+    // Garante que sempre retorna JSON válido
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: "Erro no servidor",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
+    }
   }
 });
 
@@ -85,6 +139,13 @@ router.post("/logout", function (req, res) {
 });
 
 router.get("/user/profile", function (req, res) {
+  // Debug: verificar se a sessão existe
+  if (process.env.NODE_ENV === "development") {
+    console.log("Session ID:", req.sessionID);
+    console.log("Session user:", req.session.user);
+    console.log("Cookies recebidos:", req.headers.cookie);
+  }
+
   if (req.session.user) {
     res.json({ success: true, user: req.session.user });
   } else {
