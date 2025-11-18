@@ -50,6 +50,25 @@ app.use(
   })
 );
 
+app.use(logger("dev"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
+app.get("/status", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Server is running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use("/", indexRouter);
 app.use("/home", homeRouter);
 app.use("/home-admin", homeAdminRouter);
@@ -64,7 +83,7 @@ app.use("/api", indexRouter);
 
     await sequelize.sync({
       force: false,
-      alter: process.env.NODE_ENV === "development",
+      alter: process.env.NODE_ENV === "production",
     });
     console.log("Banco de dados sincronizado com sucesso.");
 
@@ -90,6 +109,12 @@ app.use("/api", indexRouter);
     console.error(
       "Verifique se o PostgreSQL está rodando e as credenciais estão corretas."
     );
+    console.log(
+      "Aplicação iniciará sem conexão com o banco. Tente novamente mais tarde."
+    );
+    if (process.env.NODE_ENV === "production") {
+      console.log("Continuando em modo de produção sem banco de dados...");
+    }
   }
 })();
 
