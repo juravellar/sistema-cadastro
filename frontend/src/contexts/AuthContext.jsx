@@ -22,8 +22,19 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
+      // Debug: verificar cookies antes de fazer a requisição
+      const cookies = document.cookie;
+      if (cookies) {
+        console.log("Cookies disponíveis:", cookies);
+      } else {
+        console.warn("Nenhum cookie disponível no navegador");
+      }
+
       const response = await fetch("/api/user/profile", {
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
@@ -55,19 +66,43 @@ export const AuthProvider = ({ children }) => {
         credentials: "include",
       });
 
+      // Nota: response.headers.get("set-cookie") não funciona no navegador por segurança
+      // O cookie é salvo automaticamente pelo navegador se o servidor enviar Set-Cookie
+
+      // Verifica se a resposta tem conteúdo antes de tentar fazer parse
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Resposta não é JSON:", text);
+        return {
+          success: false,
+          message: "Erro ao processar resposta do servidor",
+        };
+      }
+
       const data = await response.json();
 
       if (data.success && data.user) {
         setUser(data.user);
         setIsAuthenticated(true);
         setIsAdmin(data.user.email.includes("@admin"));
+
+        // Pequeno delay para garantir que o cookie seja salvo antes de redirecionar
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         return { success: true, redirectTo: data.redirectTo };
       } else {
-        return { success: false, message: data.message };
+        return {
+          success: false,
+          message: data.message || "Erro ao fazer login",
+        };
       }
     } catch (error) {
       console.error("Erro no login:", error);
-      return { success: false, message: "Erro ao fazer login" };
+      return {
+        success: false,
+        message: error.message || "Erro ao conectar com o servidor",
+      };
     }
   };
 

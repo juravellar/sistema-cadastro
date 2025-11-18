@@ -14,11 +14,22 @@ function Home() {
     try {
       const response = await fetch("/api/user/profile", {
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+
       if (response.ok) {
         const data = await response.json();
-        setUser(data.user);
+        if (data.success && data.user) {
+          setUser(data.user);
+        } else {
+          console.warn("Resposta OK mas sem usuário:", data);
+          navigate("/");
+        }
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn("Erro ao buscar perfil:", response.status, errorData);
         navigate("/");
       }
     } catch (error) {
