@@ -1,291 +1,240 @@
+
+---
 # Sistema de Cadastro
 
-Um sistema de cadastro completo com **frontend em React (Vite)** e **backend em Node.js (Express)**, integrado a um banco de dados **PostgreSQL**.  
-O projeto suporta autenticação de usuários e foi estruturado para rodar backend e frontend em paralelo.
+Um sistema completo com **frontend em React (Vite)** e **backend em Node.js (Express)** integrado a um banco **PostgreSQL**.  
+O projeto está totalmente preparado para **desenvolvimento**, **produção**, **Docker Dev**, **Docker Prod**, e **deploy em Vercel**.
 
-<<<<<<< HEAD
+---
 
-## Estrutura do Projeto
+# Estrutura do Projeto
 
 ```
+
 sistema-cadastro/
-├── backend/                 # Servidor Express.js
-│   ├── app.js              # Arquivo principal do servidor
-│   ├── bin/                # Scripts de inicialização
-│   ├── middlewares/        # Middlewares de autenticação
-│   ├── models/             # Modelos do banco de dados
-│   ├── routes/             # Rotas da API
-│   ├── scripts/            # Scripts de configuração do banco
-│   ├── views/              # Templates EJS
-│   ├── public/             # Arquivos estáticos
-│   └── package.json        # Dependências do backend
-├── frontend/               # Aplicação React
-│   ├── src/                # Código fonte React
-│   ├── index.html          # HTML principal
-│   ├── package.json        # Dependências do frontend
-│   └── vite.config.js      # Configuração do Vite
-└── README.md               # Este arquivo
+├── backend/                 # API Node.js / Express
+│   ├── app.js
+│   ├── routes/
+│   ├── models/
+│   ├── middlewares/
+│   ├── bin/www
+│   └── package.json
+│
+├── frontend/                # Aplicação React (Vite)
+│   ├── src/
+│   ├── index.html
+│   └── package.json
+│
+├── docker/                  # Arquitetura Docker (dev + prod)
+│   ├── api/
+│   ├── frontend/
+│   └── nginx/
+│
+├── docker-compose.yml       # Compose de desenvolvimento
+├── docker-compose.prod.yml  # Compose de produção
+├── .env                     # Variáveis de ambiente
+└── README.md
+
+````
+
+---
+
+# **Execução com Docker (Recomendado)**
+
+## Ambiente de Produção
+
+```bash
+docker compose -f docker-compose.prod.yml up --build -d
+````
+
+Acesse:
+
+* **Frontend** → [http://localhost](http://localhost)
+* **API (via Nginx)** → [http://localhost/api](http://localhost/api)
+* **Nginx Reverse Proxy** → porta 80
+
+---
+
+## Ambiente de Desenvolvimento
+
+```bash
+docker compose up --build
 ```
 
-## Como executar
+Acesse:
 
-### Backend (Express.js)
+* **Frontend** → [http://localhost:5173](http://localhost:5173)
+* **API** → [http://localhost:3000](http://localhost:3000)
 
-1. Navegue para a pasta backend:
+---
+
+# Arquitetura Docker Utilizada
+
+A estrutura Docker foi organizada para garantir:
+
+✔ Builds otimizados
+✔ Isolamento completo de frontend, backend e nginx
+✔ Reverse proxy seguro em produção
+✔ Hot reload no desenvolvimento
+✔ Nenhum secret exposto
+
+Para detalhes completos, consulte a pasta:
+`/docker/`
+
+---
+
+# Execução Sem Docker
+
+## Backend (Express.js)
+
+1. Entre na pasta:
 
    ```bash
    cd backend
    ```
 
-2. Instale as dependências:
+2. Instale dependências:
 
    ```bash
    npm install
    ```
 
-3. Configure as variáveis de ambiente (crie um arquivo `.env`):
+3. Crie seu `.env`:
 
-   ```
+   ```env
    DB_HOST=localhost
    DB_PORT=5432
    DB_NAME=sistema_cadastro
    DB_USER=seu_usuario
    DB_PASSWORD=sua_senha
-   SESSION_SECRET=seu_segredo_sessao
+   SESSION_SECRET=sua_chave_ultra_segura
    ```
 
-4. Execute o servidor:
+4. Rode:
+
    ```bash
    npm run dev
    ```
 
-O backend estará disponível em `http://localhost:3002`
+API → [http://localhost:3002](http://localhost:3002)
 
-### Frontend (React)
+---
 
-1. Navegue para a pasta frontend:
+## Frontend (React + Vite)
+
+1. Entre na pasta:
 
    ```bash
    cd frontend
    ```
 
-2. Instale as dependências:
+2. Instale:
 
    ```bash
    npm install
    ```
 
-3. Execute o servidor de desenvolvimento:
+3. Rode:
+
    ```bash
    npm run dev
    ```
 
-O frontend estará disponível em `http://localhost:5173`
+Frontend → [http://localhost:5173](http://localhost:5173)
 
-## 🚀 Deploy no Vercel
+---
 
-### Configuração Automática
+# Deploy no Vercel
 
-1. **Conecte seu repositório GitHub ao Vercel**
-2. **Configure as variáveis de ambiente no Vercel:**
+A Vercel fará deploy automático somente do **frontend**, então você tem duas opções:
 
-   ```
-   NODE_ENV=production
-   DB_HOST=seu_host_postgresql
-   DB_PORT=5432
-   DB_NAME=sistema_cadastro
-   DB_USER=seu_usuario
-   DB_PASSWORD=sua_senha
-   SESSION_SECRET=seu_segredo_sessao
-   ```
+### ✔ **OPÇÃO 1 — Backend no Render / Railway / VPS**
 
-3. **Deploy automático** - O Vercel detectará automaticamente:
-   - **Frontend**: Build do React na pasta `frontend/`
-   - **Backend**: API Node.js na pasta `backend/`
+E o frontend na Vercel consumindo a API externa.
 
-### Configuração Manual
+Configure:
 
-Se precisar configurar manualmente no Vercel:
+```
+VITE_API_URL=https://url-da-api
+```
 
-- **Framework Preset**: Vite
-- **Root Directory**: `./`
-- **Build Command**: `npm run vercel-build`
-- **Output Directory**: `frontend/dist`
-- **Install Command**: `npm run install:all`
+---
 
-## 📚 Comandos Disponíveis
+### ✔ **OPÇÃO 2 — Mono-Repo com API funcionando em Serverless**
 
-Execute na raiz do projeto:
+Adicione no Vercel:
+
+```
+NODE_ENV=production
+DB_HOST=
+DB_PORT=
+DB_NAME=
+DB_USER=
+DB_PASSWORD=
+SESSION_SECRET=
+```
+
+---
+
+# Scripts Disponíveis
 
 ```bash
-# Desenvolvimento
-npm run dev              # Executa backend e frontend simultaneamente
-npm run dev:backend      # Executa apenas o backend
-npm run dev:frontend     # Executa apenas o frontend
-
-# Build e Deploy
-npm run build            # Build do frontend para produção
-npm run vercel-build     # Build específico para Vercel
-npm run install:all      # Instala todas as dependências
+# Dev
+npm run dev              # Backend + Frontend juntos
+npm run dev:backend      # Só backend
+npm run dev:frontend     # Só frontend
 
 # Produção
-npm start                # Executa o backend em modo produção
-```
+npm start                # Backend em modo produção
 
-## Configuração
+# Frontend
+npm run build            # Build do frontend
+npm run vercel-build     # Build especial para Vercel
 
-- O frontend está configurado para fazer proxy das requisições `/api/*` para o backend em `http://localhost:5173`
-- Certifique-se de que o backend esteja rodando antes de iniciar o frontend
-- O sistema usa PostgreSQL como banco de dados
-
-## Tecnologias
-
-## =======
-
-## 🚀 Tecnologias Utilizadas
-
-> > > > > > > react-node.js
-
-### Backend
-
-- [Node.js](https://nodejs.org/)
-- [Express](https://expressjs.com/)
-- [Sequelize](https://sequelize.org/) (ORM para PostgreSQL)
-- [JWT](https://jwt.io/) para autenticação
-- Middlewares de autenticação
-
-### Frontend
-
-- [React](https://reactjs.org/)
-- [Vite](https://vitejs.dev/) (build e dev server)
-- [Axios](https://axios-http.com/) para chamadas à API
-
-### Outros
-
-- [PostgreSQL](https://www.postgresql.org/) como banco de dados
-- [Concurrently](https://www.npmjs.com/package/concurrently) para rodar backend e frontend juntos
-- [Rimraf](https://www.npmjs.com/package/rimraf) para limpeza de dependências e builds
-
----
-
-## 📂 Estrutura do Projeto
-
-```
-
-sistema-cadastro/
-├── backend/          # Código do servidor Express
-│   ├── app.js        # Ponto de entrada do backend
-│   ├── models/       # Modelos Sequelize (ex.: User)
-│   ├── middlewares/  # Middlewares de autenticação
-│   └── bin/www       # Inicialização do servidor
-│
-├── frontend/         # Aplicação React
-│   ├── index.html    # HTML base
-│   ├── src/          # Código React
-│   └── vite.config.js
-│
-├── .env              # Variáveis de ambiente
-├── package.json      # Scripts para backend + frontend
-└── README.md
-
+# Utilidades
+npm run install:all      # Instala backend + frontend
+npm run clean            # Remove dependências e dist
 ```
 
 ---
 
-## ⚙️ Configuração do Ambiente
+#  Configuração Importante
 
-### 1. Clonar o repositório
+* Todo tráfego `/api/*` no frontend é roteado automaticamente para o backend.
+* O sistema utiliza **PostgreSQL** + **Sequelize**.
+* O backend utiliza:
 
-```bash
-git clone https://github.com/seu-usuario/sistema-cadastro.git
-cd sistema-cadastro
-```
+  * JWT para autenticação
+  * Middlewares personalizados
+  * Validação de sessão
+* O frontend utiliza:
 
-### 2. Configurar variáveis de ambiente
-
-Crie o arquivo `.env` na raiz do projeto com, por exemplo:
-
-```env
-# Configurações do servidor
-PORT=1
-
-# Banco de dados
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=sistema_cadastro
-DB_USER=seu_usuario
-DB_PASSWORD=sua_senha
-
-# JWT
-JWT_SECRET=uma_chave_segura_aqui
-```
-
-Você pode usar `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` para **gerar uma chave aleatória e segura em hexadecimal**, ideal para **tokens, senhas fortes ou secrets** em aplicações.
-
-### 3. Instalar dependências
-
-```bash
-npm run install:all
-```
+  * React + Vite
+  * Axios para requisições
 
 ---
 
-## ▶️ Como Rodar
+# Funcionalidades
 
-### Ambiente de desenvolvimento
-
-```bash
-npm run dev
-```
-
-> Isso vai iniciar **backend** e **frontend** juntos.
-
-### Rodar apenas o backend
-
-```bash
-npm run dev:backend
-```
-
-### Rodar apenas o frontend
-
-```bash
-npm run dev:frontend
-```
-
-### Build do frontend
-
-```bash
-npm run build
-```
-
-### Produção (backend)
-
-```bash
-npm start
-```
+* Cadastro de usuários
+* Login e autenticação com JWT
+* Rota protegidas
+* Integração completa com PostgreSQL
+* Interface moderna em React
 
 ---
 
-## 🧹 Limpeza
+# Segurança
 
-Para remover `node_modules` e pastas `dist`:
-
-```bash
-npm run clean
-```
-
----
-
-## ✨ Funcionalidades
-
-- Cadastro e login de usuários
-- Autenticação com JWT
-- Proteção de rotas com middlewares
-- Integração com banco PostgreSQL
-- Frontend em React para interação com o usuário
+* `.env` nunca é enviado para o cliente
+* API não fica exposta em produção (somente via Nginx)
+* Reverse proxy configurado corretamente
+* Secrets protegidos
+* Dockerfile sem node_modules ou lixo
 
 ---
 
-## 📜 Licença
+# Licença
 
-Este projeto está licenciado sob a licença **ISC**.
+Licença **ISC**.
+

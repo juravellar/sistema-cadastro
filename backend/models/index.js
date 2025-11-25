@@ -1,54 +1,31 @@
 require("dotenv").config();
-
 const { Sequelize } = require("sequelize");
 
 const {
-  DATABASE_URL,
-  PGHOST,
-  PGPORT,
-  PGUSER,
-  PGPASSWORD,
-  PGDATABASE,
-  NODE_ENV,
-  DATABASE_SSL,
+  PGHOST = "postgres",
+  PGPORT = "5432",
+  PGUSER = "postgres",
+  PGPASSWORD = "postgres",
+  PGDATABASE = "sistema_cadastro",
+  NODE_ENV = "development",
 } = process.env;
 
 console.log("🔍 Database Configuration Debug:");
-console.log("DATABASE_URL:", DATABASE_URL ? "SET" : "NOT SET");
-console.log("PGHOST:", PGHOST || "127.0.0.1 (default)");
-console.log("PGPORT:", PGPORT || "5432 (default)");
-console.log("PGUSER:", PGUSER || "postgres (default)");
-console.log("PGDATABASE:", PGDATABASE || "sistema-cadastro (default)");
-console.log("NODE_ENV:", NODE_ENV || "production (default)");
-console.log("DATABASE_SSL:", DATABASE_SSL === "true" ? "true" : "false");
+console.log("PGHOST:", PGHOST);
+console.log("PGPORT:", PGPORT);
+console.log("PGUSER:", PGUSER);
+console.log("PGDATABASE:", PGDATABASE);
+console.log("NODE_ENV:", NODE_ENV);
 
-const useUrl = !!DATABASE_URL;
-
-// Determina se deve usar SSL baseado na variável DATABASE_SSL ou NODE_ENV
-const useSSL = DATABASE_SSL === "true" || NODE_ENV === "production";
-
-const sequelize = useUrl
-  ? new Sequelize(DATABASE_URL, {
-      dialect: "postgres",
-      logging: false,
-      dialectOptions: useSSL
-        ? { ssl: { require: true, rejectUnauthorized: false } }
-        : { ssl: false },
-    })
-  : new Sequelize(
-      PGDATABASE || "sistema-cadastro",
-      PGUSER || "postgres",
-      PGPASSWORD || "0000",
-      {
-        host: PGHOST || "127.0.0.1",
-        port: PGPORT ? Number(PGPORT) : 5432,
-        dialect: "postgres",
-        logging: false,
-        dialectOptions: useSSL
-          ? { ssl: { require: true, rejectUnauthorized: false } }
-          : { ssl: false },
-      }
-    );
+const sequelize = new Sequelize(PGDATABASE, PGUSER, PGPASSWORD, {
+  host: PGHOST,
+  port: Number(PGPORT),
+  dialect: "postgres",
+  logging: false,
+  dialectOptions: {
+    ssl: false, // ❌ Nunca usar SSL no Docker
+  },
+});
 
 const User = require("./user")(sequelize);
 

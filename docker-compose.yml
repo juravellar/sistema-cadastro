@@ -1,37 +1,41 @@
-version: "3.8"
-
 services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: sistema_cadastro
+    depends_on:
+      - postgres
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://backend:3002
+    depends_on:
+      - backend
+
   postgres:
     image: postgres:16
-    container_name: sistema_cadastro_postgres
-    restart: unless-stopped
     environment:
+      POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "0000"
-      POSTGRES_DB: sistema-cadastro
+      POSTGRES_DB: sistema_cadastro
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - pgdata_sistema_cadastro:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  pgadmin:
-    image: dpage/pgadmin4:8
-    container_name: sistema_cadastro_pgadmin
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
-  pgdata_sistema_cadastro:
-    driver: local
+  pgdata:

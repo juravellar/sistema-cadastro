@@ -1,32 +1,22 @@
 #!/usr/bin/env node
 
-/**
- * Script para criar o banco de dados automaticamente
- * Conecta ao PostgreSQL e cria o banco se não existir
- */
-
 require("dotenv").config();
 const { Sequelize } = require("sequelize");
 
 const {
-  DATABASE_URL,
-  PGHOST = "127.0.0.1",
+  PGHOST = "postgres",
   PGPORT = 5432,
   PGUSER = "postgres",
-  PGPASSWORD = "0000",
-  PGDATABASE = "sistema-cadastro",
+  PGPASSWORD = "postgres",
+  PGDATABASE = "sistema_cadastro",
 } = process.env;
 
 async function createDatabase() {
   console.log("🔍 Database Creation Debug:");
-  console.log("DATABASE_URL:", DATABASE_URL ? "SET" : "NOT SET");
-  console.log("PGHOST:", PGHOST || "127.0.0.1 (default)");
-  console.log("PGPORT:", PGPORT || "5432 (default)");
-
-  if (DATABASE_URL) {
-    console.log("ℹ️  Usando DATABASE_URL - pulando criação de banco");
-    return;
-  }
+  console.log("PGHOST:", PGHOST);
+  console.log("PGPORT:", PGPORT);
+  console.log("PGUSER:", PGUSER);
+  console.log("PGDATABASE:", PGDATABASE);
 
   const adminSequelize = new Sequelize("postgres", PGUSER, PGPASSWORD, {
     host: PGHOST,
@@ -53,19 +43,12 @@ async function createDatabase() {
     }
   } catch (error) {
     console.error("❌ Erro ao criar banco:", error.message);
-    console.error(
-      "💡 Verifique se o PostgreSQL está rodando e as credenciais estão corretas"
-    );
-    if (process.env.NODE_ENV !== "production") {
-      process.exit(1);
-    }
+    process.exit(1);
   } finally {
     await adminSequelize.close();
   }
 }
 
-if (require.main === module) {
-  createDatabase();
-}
+if (require.main === module) createDatabase();
 
 module.exports = createDatabase;
