@@ -23,10 +23,10 @@ Isso irá:
 
 ### Acessos:
 
-- **Frontend**: http://localhost
+- **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3002
 - **pgAdmin**: http://localhost:5050
-  - Email: `admin@example.com`
+  - Email: `admin@admin.com`
   - Senha: `admin`
 
 ## 🔧 Modo Desenvolvimento
