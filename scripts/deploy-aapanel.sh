@@ -1,37 +1,30 @@
 #!/bin/bash
+set -euo pipefail
 
-# Caminho base do projeto (ajuste se necessário)
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-
 cd "$PROJECT_DIR"
 
-echo "=============================================="
 echo "🚀 Iniciando deploy do sistema-cadastro..."
-echo "=============================================="
 
-echo "📦 Atualizando dependências do projeto raiz..."
-npm install
+git pull --ff-only
 
-echo "📦 Atualizando dependências do backend..."
-cd backend && npm install
+echo "📦 Instalando dependências do backend..."
+npm ci --omit=dev
+npm ci --omit=dev --prefix backend
 
-cd "$PROJECT_DIR"
-echo "📦 Atualizando dependências do frontend..."
-cd frontend && npm install
+echo "🗄️  Aplicando migrations..."
+npm run migrate --prefix backend
 
-echo "🔨 Buildando frontend..."
-npm run build
+echo "📦 Buildando frontend..."
+npm ci --prefix frontend
+npm run build --prefix frontend
 
-cd "$PROJECT_DIR"
 echo "🔄 Reiniciando backend com PM2..."
-
-# Tenta reiniciar. Se não existir, cria.
-pm2 restart sistema-cadastro-backend --update-env || \
-pm2 start npm --name sistema-cadastro-backend -- run start --prefix backend
-
-echo "💾 Salvando configuração do PM2..."
+if pm2 describe sistema-cadastro-backend >/dev/null 2>&1; then
+  pm2 restart sistema-cadastro-backend --update-env
+else
+  pm2 start backend/ecosystem.config.js --env production
+fi
 pm2 save
 
-echo "=============================================="
-echo "✅ Deploy finalizado com sucesso!"
-echo "=============================================="
+echo "✅ Deploy finalizado"

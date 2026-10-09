@@ -2,23 +2,41 @@ services:
   backend:
     build:
       context: ./backend
+    env_file: .env
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
+      PGHOST: postgres
+    command: sh -c "npm run migrate && npm start"
     expose:
       - "3002"
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
-    expose:
-      - "80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
   nginx:
     build:
-      context: ./nginx
+      context: .
+      dockerfile: nginx/Dockerfile
     ports:
       - "80:80"
     depends_on:
       - backend
-      - frontend
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${PGUSER:?defina PGUSER no .env}
+      POSTGRES_PASSWORD: ${PGPASSWORD:?defina PGPASSWORD no .env}
+      POSTGRES_DB: ${PGDATABASE:?defina PGDATABASE no .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:
