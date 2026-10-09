@@ -1,136 +1,90 @@
-const createError = require("http-errors");
+require("dotenv").config();
 const express = require("express");
-const path = require("path");
-const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const session = require("express-session");
 const cors = require("cors");
-require("dotenv").config();
+const createApiRouter = require("./routes");
 
-const indexRouter = require("./routes/index");
-const homeRouter = require("./routes/home");
-const homeAdminRouter = require("./routes/home-admin");
-const { sequelize } = require("./models");
-const createDatabase = require("./scripts/create-database");
-
-const app = express();
-
-// Configuração CORS para permitir credenciais
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
-
-// Configuração de sessão melhorada
 const isProduction = process.env.NODE_ENV === "production";
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "segredo-dev",
-    resave: false,
-    saveUninitialized: true, // Mudado para true para garantir que sessões sejam criadas
-    name: "connect.sid", // Nome explícito do cookie
-    cookie: {
-      secure: false, // Sempre false em desenvolvimento (mesmo que seja produção local)
-      httpOnly: true, // Previne acesso via JavaScript (segurança)
-      sameSite: "lax", // "lax" funciona melhor em desenvolvimento com proxy
-      maxAge: 24 * 60 * 60 * 1000, // 24 horas
-      path: "/", // Path explícito para garantir que funcione em todas as rotas
-      domain: undefined, // Deixa o navegador decidir o domínio
-    },
-  })
-);
+const isDevelopment = process.env.NODE_ENV === "development";
+// COOKIE_SECURE=false só quando o TLS não termina antes do app (ex.: compose local sem HTTPS).
+const secureCookie = process.env.COOKIE_SECURE
+  ? process.env.COOKIE_SECURE === "true"
+  : isProduction;
 
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
-
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
-app.get("/status", (req, res) => {
-  res.json({
-    status: "ok",
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.use("/", indexRouter);
-app.use("/home", homeRouter);
-app.use("/home-admin", homeAdminRouter);
-app.use("/api", indexRouter);
-
-(async () => {
-  try {
-    await createDatabase();
-
-    await sequelize.authenticate();
-    console.log("Conexão com o banco de dados estabelecida com sucesso.");
-
-    await sequelize.sync({
-      force: false,
-      alter: process.env.NODE_ENV === "production",
-    });
-    console.log("Banco de dados sincronizado com sucesso.");
-
-    const bcrypt = require("bcrypt");
-    const { User } = require("./models");
-
-    const adminExists = await User.findOne({
-      where: { email: "admin@admin.com" },
-    });
-    if (!adminExists) {
-      const hashedPassword = await bcrypt.hash("admin", 10);
-      await User.create({
-        username: "admin",
-        email: "admin@admin.com",
-        password: hashedPassword,
-      });
-      console.log("Usuário admin criado: admin@admin.com / admin");
-    } else {
-      console.log("Usuário admin já existe.");
-    }
-  } catch (err) {
-    console.error("Erro ao sincronizar o banco:", err);
-    console.error(
-      "Verifique se o PostgreSQL está rodando e as credenciais estão corretas."
-    );
-    console.log(
-      "Aplicação iniciará sem conexão com o banco. Tente novamente mais tarde."
-    );
-    if (process.env.NODE_ENV === "production") {
-      console.log("Continuando em modo de produção sem banco de dados...");
-    }
+function resolveSessionSecret() {
+  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
+  if (isProduction) {
+    throw new Error("SESSION_SECRET é obrigatório em produção");
   }
-})();
+  return "dev-only-session-secret";
+}
 
-app.use(function (req, res, next) {
-  next(createError(404));
-});
+function createPgSessionStore() {
+  const PgSession = require("connect-pg-simple")(session);
+  const { connection } = require("./models");
+  return new PgSession({ conObject: connection, tableName: "session" });
+}
 
-app.use(function (err, req, res, next) {
-  res.status(err.status || 500);
-  res.json({
-    error: {
-      message: err.message,
-      status: err.status || 500,
-      ...(req.app.get("env") === "development" && { stack: err.stack }),
-    },
+function createApp({ sessionStore, authRateLimit } = {}) {
+  const app = express();
+
+  // Atrás de nginx: necessário para req.ip correto (rate limit) e cookie secure.
+  app.set("trust proxy", 1);
+  app.disable("x-powered-by");
+
+  app.use(
+    cors({
+      origin: process.env.FRONTEND_URL || "http://localhost:5173",
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type"],
+    })
+  );
+
+  if (process.env.NODE_ENV !== "test") {
+    app.use(logger(isProduction ? "combined" : "dev"));
+  }
+  app.use(express.json({ limit: "10kb" }));
+
+  app.use(
+    session({
+      store: sessionStore || createPgSessionStore(),
+      secret: resolveSessionSecret(),
+      resave: false,
+      saveUninitialized: false,
+      name: "connect.sid",
+      cookie: {
+        secure: secureCookie,
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+        path: "/",
+      },
+    })
+  );
+
+  app.get("/status", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
-});
 
-module.exports = app;
+  app.use("/api", createApiRouter({ authRateLimit }));
+
+  app.use((req, res) => {
+    res.status(404).json({ success: false, message: "Recurso não encontrado" });
+  });
+
+  app.use((err, req, res, next) => {
+    const status = err.status || err.statusCode || 500;
+    if (status >= 500) console.error(err);
+    res.status(status).json({
+      success: false,
+      message: status >= 500 ? "Erro interno do servidor" : err.message,
+      ...(isDevelopment && { stack: err.stack }),
+    });
+  });
+
+  return app;
+}
+
+module.exports = createApp;
