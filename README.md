@@ -99,18 +99,25 @@ Para detalhes completos, consulte a pasta:
    npm install
    ```
 
-3. Crie seu `.env`:
+3. Crie seu `.env` (veja `.env.example`):
 
    ```env
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=sistema_cadastro
-   DB_USER=seu_usuario
-   DB_PASSWORD=sua_senha
+   PGHOST=localhost
+   PGPORT=5432
+   PGDATABASE=sistema_cadastro
+   PGUSER=seu_usuario
+   PGPASSWORD=sua_senha
    SESSION_SECRET=sua_chave_ultra_segura
    ```
 
-4. Rode:
+4. Aplique as migrations e crie o primeiro administrador:
+
+   ```bash
+   npm run migrate
+   ADMIN_EMAIL=voce@exemplo.com ADMIN_PASSWORD='senha-forte-aqui' npm run create-admin
+   ```
+
+5. Rode:
 
    ```bash
    npm run dev
@@ -166,11 +173,11 @@ Adicione no Vercel:
 
 ```
 NODE_ENV=production
-DB_HOST=
-DB_PORT=
-DB_NAME=
-DB_USER=
-DB_PASSWORD=
+PGHOST=
+PGPORT=
+PGDATABASE=
+PGUSER=
+PGPASSWORD=
 SESSION_SECRET=
 ```
 
@@ -187,50 +194,57 @@ npm run dev:frontend     # Só frontend
 # Produção
 npm start                # Backend em modo produção
 
-# Frontend
-npm run build            # Build do frontend
-npm run vercel-build     # Build especial para Vercel
+# Backend (dentro de backend/)
+npm run migrate          # Aplica migrations pendentes
+npm run migrate:down     # Reverte a última migration
+npm run create-admin     # Cria/promove admin (ADMIN_EMAIL, ADMIN_PASSWORD)
+npm test                 # Testes de integração (Postgres em localhost:55432, ou TEST_PG*)
+
+# Frontend (dentro de frontend/)
+npm run lint             # ESLint
+npm run build            # Build de produção
 
 # Utilidades
-npm run install:all      # Instala backend + frontend
+npm run install:all      # Instala raiz + backend + frontend
 npm run clean            # Remove dependências e dist
+```
+
+Para rodar os testes do backend localmente:
+
+```bash
+docker run -d --rm --name sc-test-pg -e POSTGRES_PASSWORD=postgres -p 55432:5432 postgres:16
+cd backend && npm test
 ```
 
 ---
 
 #  Configuração Importante
 
-* Todo tráfego `/api/*` no frontend é roteado automaticamente para o backend.
-* O sistema utiliza **PostgreSQL** + **Sequelize**.
-* O backend utiliza:
-
-  * JWT para autenticação
-  * Middlewares personalizados
-  * Validação de sessão
-* O frontend utiliza:
-
-  * React + Vite
-  * Axios para requisições
+* Todo tráfego `/api/*` é roteado para o backend, que monta todas as rotas sob `/api`.
+* **PostgreSQL** + **Sequelize**, com schema versionado por migrations (`backend/db/migrations`).
+* Autenticação por **sessão** (cookie `httpOnly`), com sessões persistidas no Postgres (`connect-pg-simple`).
+* Autorização por papel (`role`: `user` | `admin`). O cadastro público sempre cria `user`. Admins só são criados via `npm run create-admin`.
 
 ---
 
 # Funcionalidades
 
 * Cadastro de usuários
-* Login e autenticação com JWT
-* Rota protegidas
+* Login e autenticação por sessão
+* Rotas protegidas e painel administrativo (listar, editar e excluir usuários)
 * Integração completa com PostgreSQL
-* Interface moderna em React
+* Interface em React
 
 ---
 
 # Segurança
 
-* `.env` nunca é enviado para o cliente
-* API não fica exposta em produção (somente via Nginx)
-* Reverse proxy configurado corretamente
-* Secrets protegidos
-* Dockerfile sem node_modules ou lixo
+* `SESSION_SECRET` obrigatório em produção (o servidor não inicia sem ele)
+* Rate limit em `/api/login` e `/api/signup`
+* ID de sessão regenerado no login
+* Mensagem de erro de login genérica (não revela se o e-mail existe)
+* Validação de entrada no backend (senha de 8 a 72 bytes)
+* Webhook de deploy exige `WEBHOOK_SECRET` e valida a assinatura HMAC do GitHub
 
 ---
 
