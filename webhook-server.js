@@ -1,144 +1,87 @@
 const express = require("express");
-const { exec } = require("child_process");
+const { execFile } = require("child_process");
 const crypto = require("crypto");
 const path = require("path");
 
-const app = express();
-const PORT = process.env.WEBHOOK_PORT || 3002;
+const PORT = Number(process.env.WEBHOOK_PORT) || 3003;
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+const DEPLOY_SCRIPT = path.join(__dirname, "scripts", "deploy-aapanel.sh");
+const DEPLOY_BRANCHES = new Set(["refs/heads/main"]);
 
-// Middleware para parsing JSON
-app.use(express.json());
-
-// Secret para verificar webhooks (configure no GitHub)
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "seu-secret-aqui";
-
-// Função para verificar assinatura do webhook
-function verifySignature(payload, signature) {
-  const expectedSignature = crypto
-    .createHmac("sha256", WEBHOOK_SECRET)
-    .update(payload)
-    .digest("hex");
-
-  return signature === `sha256=${expectedSignature}`;
+if (!WEBHOOK_SECRET) {
+  console.error("❌ WEBHOOK_SECRET não definido. Recusando iniciar sem verificação de assinatura.");
+  process.exit(1);
 }
 
-// Endpoint para receber webhooks do GitHub
-app.post("/webhook/deploy", (req, res) => {
-  console.log("📥 Webhook recebido:", new Date().toISOString());
-
-  const signature = req.headers["x-hub-signature-256"];
-  const payload = JSON.stringify(req.body);
-
-  // Verificar assinatura (opcional, mas recomendado)
-  if (
-    WEBHOOK_SECRET !== "seu-secret-aqui" &&
-    !verifySignature(payload, signature)
-  ) {
-    console.log("❌ Assinatura inválida");
-    return res.status(401).send("Unauthorized");
-  }
-
-  // Verificar se é um push para a branch main
-  const { ref, commits } = req.body;
-  if (ref !== "refs/heads/main" && ref !== "refs/heads/master") {
-    console.log("⏭️ Push não é para main/master, ignorando");
-    return res.status(200).send("Not main branch");
-  }
-
-  console.log("🚀 Iniciando deploy automático...");
-
-  // Executar script de deploy
-  const deployScript = path.join(__dirname, "scripts", "git-deploy.sh");
-
-  exec(`bash ${deployScript}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error("❌ Erro no deploy:", error);
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        stderr: stderr,
-      });
-    }
-
-    console.log("✅ Deploy executado com sucesso!");
-    console.log("📋 Output:", stdout);
-
-    res.status(200).json({
-      success: true,
-      message: "Deploy successful",
-      output: stdout,
-    });
-  });
-});
-
-// Endpoint de health check
-app.get("/webhook/health", (req, res) => {
-  res.status(200).json({
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
-});
-
-// Endpoint para deploy manual
-app.post("/webhook/deploy-manual", (req, res) => {
-  console.log("🔧 Deploy manual solicitado:", new Date().toISOString());
-
-  const deployScript = path.join(__dirname, "scripts", "git-deploy.sh");
-
-  exec(`bash ${deployScript}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error("❌ Erro no deploy manual:", error);
-      return res.status(500).json({
-        success: false,
-        error: error.message,
-        stderr: stderr,
-      });
-    }
-
-    console.log("✅ Deploy manual executado com sucesso!");
-
-    res.status(200).json({
-      success: true,
-      message: "Manual deploy successful",
-      output: stdout,
-    });
-  });
-});
-
-// Middleware de erro
-app.use((err, req, res, next) => {
-  console.error("❌ Erro no servidor webhook:", err);
-  res.status(500).json({
-    success: false,
-    error: "Internal server error",
-  });
-});
-
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor webhook rodando na porta ${PORT}`);
-  console.log(`📡 Endpoints disponíveis:`);
-  console.log(`   - POST /webhook/deploy (webhook do GitHub)`);
-  console.log(`   - POST /webhook/deploy-manual (deploy manual)`);
-  console.log(`   - GET /webhook/health (health check)`);
-  console.log(
-    `🔐 Secret configurado: ${
-      WEBHOOK_SECRET !== "seu-secret-aqui"
-        ? "Sim"
-        : "Não (configure WEBHOOK_SECRET)"
-    }`
+function isValidSignature(rawBody, signatureHeader) {
+  if (typeof signatureHeader !== "string" || !rawBody) return false;
+  const expected = Buffer.from(
+    `sha256=${crypto.createHmac("sha256", WEBHOOK_SECRET).update(rawBody).digest("hex")}`
   );
+  const received = Buffer.from(signatureHeader);
+  return expected.length === received.length && crypto.timingSafeEqual(expected, received);
+}
+
+let deployInProgress = false;
+
+function runDeploy() {
+  deployInProgress = true;
+  execFile("bash", [DEPLOY_SCRIPT], { timeout: 10 * 60 * 1000 }, (error, stdout, stderr) => {
+    deployInProgress = false;
+    if (error) {
+      console.error("❌ Erro no deploy:", error.message, stderr);
+      return;
+    }
+    console.log("✅ Deploy concluído\n", stdout);
+  });
+}
+
+const app = express();
+app.disable("x-powered-by");
+
+// O GitHub assina os bytes exatos do corpo, e re-serializar o JSON
+// gera outra string que invalida o HMAC.
+app.use(
+  express.json({
+    limit: "1mb",
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
+
+app.post("/webhook/deploy", (req, res) => {
+  if (!isValidSignature(req.rawBody, req.headers["x-hub-signature-256"])) {
+    console.warn("❌ Assinatura inválida");
+    return res.status(401).json({ success: false });
+  }
+
+  if (req.headers["x-github-event"] === "ping") {
+    return res.status(200).json({ success: true, message: "pong" });
+  }
+
+  if (!DEPLOY_BRANCHES.has(req.body.ref)) {
+    return res.status(200).json({ success: true, message: "Branch ignorada" });
+  }
+
+  if (deployInProgress) {
+    return res.status(409).json({ success: false, message: "Deploy já em andamento" });
+  }
+
+  // GitHub encerra a entrega após 10s; o deploy roda em background.
+  runDeploy();
+  res.status(202).json({ success: true, message: "Deploy iniciado" });
 });
 
-// Graceful shutdown
-process.on("SIGTERM", () => {
-  console.log("🛑 Recebido SIGTERM, encerrando servidor webhook...");
-  process.exit(0);
+app.get("/webhook/health", (req, res) => {
+  res.json({ status: "healthy", deployInProgress });
 });
 
-process.on("SIGINT", () => {
-  console.log("🛑 Recebido SIGINT, encerrando servidor webhook...");
-  process.exit(0);
+app.use((err, req, res, next) => {
+  console.error("❌ Erro no servidor webhook:", err.message);
+  res.status(err.status || 500).json({ success: false });
 });
 
+app.listen(PORT, () => {
+  console.log(`🚀 Webhook ouvindo na porta ${PORT}`);
+});
