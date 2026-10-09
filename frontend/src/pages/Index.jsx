@@ -89,9 +89,9 @@ function Index() {
     }
 
     if (!signupPassword.trim()) {
-      errors.password = "A senha deve ter pelo menos 6 caracteres.";
-    } else if (signupPassword.length < 6) {
-      errors.password = "A senha deve ter pelo menos 6 caracteres.";
+      errors.password = "A senha deve ter pelo menos 8 caracteres.";
+    } else if (signupPassword.length < 8) {
+      errors.password = "A senha deve ter pelo menos 8 caracteres.";
     }
 
     if (!signupConfirmPassword.trim()) {
@@ -301,7 +301,7 @@ function Index() {
                       value={signupPassword}
                       onChange={(e) => setSignupPassword(e.target.value)}
                       required
-                      minLength="6"
+                      minLength="8"
                       disabled={isLoading}
                     />
                     {signupErrors.password && (

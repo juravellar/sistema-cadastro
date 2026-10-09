@@ -80,7 +80,7 @@ export const AdminRoute = ({ children }) => {
 };
 
 export const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (

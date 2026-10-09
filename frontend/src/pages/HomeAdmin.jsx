@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 function HomeAdmin() {
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,26 +18,8 @@ function HomeAdmin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUserInfo();
     fetchUsers();
   }, []);
-
-  const fetchUserInfo = async () => {
-    try {
-      const response = await fetch("/api/user/profile", {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar informações do usuário:", error);
-      navigate("/");
-    }
-  };
 
   const fetchUsers = async () => {
     try {
@@ -60,22 +43,8 @@ function HomeAdmin() {
   };
 
   const handleLogout = async () => {
-    try {
-      const response = await fetch("/api/logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        navigate("/");
-      } else {
-        alert("Erro ao fazer logout");
-      }
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      alert("Erro ao fazer logout");
-    }
+    await logout();
+    navigate("/");
   };
 
   const openEditModal = (user) => {
@@ -185,6 +154,7 @@ function HomeAdmin() {
               <th>ID</th>
               <th>Usuário</th>
               <th>Email</th>
+              <th>Perfil</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -194,6 +164,7 @@ function HomeAdmin() {
                 <td>{user.id}</td>
                 <td>{user.username}</td>
                 <td>{user.email}</td>
+                <td>{user.role === "admin" ? "Admin" : "Usuário"}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-primary me-1"
