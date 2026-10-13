@@ -1,4 +1,4 @@
-const isEmail = require("validator/lib/isEmail");
+const { Validator } = require("sequelize");
 const { ValidationError } = require("./errors");
 
 const MAX_FIELD_LENGTH = 200;
@@ -18,9 +18,9 @@ function validateRole(role) {
 
 function validateEmail(email) {
   if (typeof email !== "string" || !email.trim()) return "Email é obrigatório";
-  // Mesmo validador (e mesmas opções) do "validate: { isEmail: true }" do model:
-  // um e-mail aceito aqui não pode ser recusado pelo banco.
-  if (email.length > MAX_FIELD_LENGTH || !isEmail(email)) return "Email inválido";
+  // O mesmo Validator que o Sequelize usa no "validate: { isEmail: true }" do
+  // model: um e-mail aceito aqui não pode ser recusado pelo banco.
+  if (email.length > MAX_FIELD_LENGTH || !Validator.isEmail(email)) return "Email inválido";
   return null;
 }
 

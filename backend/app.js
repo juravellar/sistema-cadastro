@@ -4,6 +4,7 @@ const session = require("express-session");
 const cors = require("cors");
 const createApiRouter = require("./routes");
 const { config, serverConfig } = require("./config");
+const { SESSION_COOKIE } = require("./lib/session");
 
 function createPgSessionStore() {
   const PgSession = require("connect-pg-simple")(session);
@@ -47,7 +48,7 @@ function createApp({ sessionStore, authRateLimit, server = serverConfig() } = {}
       secret: server.sessionSecret,
       resave: false,
       saveUninitialized: false,
-      name: "connect.sid",
+      name: SESSION_COOKIE,
       cookie: {
         secure: server.secureCookie,
         httpOnly: true,

@@ -1,12 +1,19 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { sequelize } = require("../models");
-const { destroySession } = require("../lib/session");
+const { logout } = require("../lib/session");
 const createAuthRouter = require("./auth");
 const createMeRouter = require("./me");
 const usersRouter = require("./users");
 
-const LEGACY_PATHS = ["/login", "/signup", "/user/profile", "/user/password", "/user/id/:id"];
+const LEGACY_PATHS = [
+  "/login",
+  "/signup",
+  "/logout",
+  "/user/profile",
+  "/user/password",
+  "/user/id/:id",
+];
 
 function createApiRouter({ authRateLimit = 10 } = {}) {
   const router = express.Router();
@@ -44,11 +51,7 @@ function createApiRouter({ authRateLimit = 10 } = {}) {
   // O logout antigo precisa continuar encerrando a sessão: sem isso, quem sai
   // por uma aba antiga continua logado no servidor (problema sério em
   // computador compartilhado).
-  router.post("/logout", async (req, res) => {
-    await destroySession(req);
-    res.clearCookie("connect.sid", { path: "/" });
-    res.json({ success: true, message: "Logout realizado" });
-  });
+  router.post("/logout", logout);
 
   router.all(LEGACY_PATHS, (req, res) => {
     res

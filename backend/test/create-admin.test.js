@@ -40,6 +40,7 @@ describe("npm run create-admin", () => {
     });
 
     assert.equal(run.status, 0, run.stderr);
+    assert.match(run.stdout, /Admin chefe@example\.com criado/);
     const user = await User.findOne({ where: { email: "chefe@example.com" } });
     assert.equal(user.role, "admin");
     assert.ok(await bcrypt.compare("senha-forte-123", user.password));
@@ -65,6 +66,12 @@ describe("npm run create-admin", () => {
     assert.notEqual(run.status, 0);
     assert.match(run.stderr, /8 caracteres/);
     assert.equal(await User.count(), 0);
+  });
+
+  it("recusa e-mail inválido", () => {
+    const run = runCreateAdmin({ ADMIN_EMAIL: "invalido", ADMIN_PASSWORD: "senha-forte-123" });
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, /Email inválido/);
   });
 
   it("falha sem ADMIN_EMAIL", () => {

@@ -81,14 +81,21 @@ describe("config", () => {
     assert.throws(() => loadConfig({ ...base, PORT: "abc" }, "c.serverConfig()"), /PORT/);
   });
 
-  it("ignora o .env do diretório do backend", () => {
-    const envFile = path.join(__dirname, "..", ".env");
-    const hadEnv = fs.existsSync(envFile);
-    if (!hadEnv) fs.writeFileSync(envFile, "NODE_ENV=development\n");
-    try {
-      assert.equal(loadConfig({}, "c.config.isDevelopment"), false);
-    } finally {
-      if (!hadEnv) fs.unlinkSync(envFile);
-    }
+  // O isolamento depende de o dotenv ler o .env do cwd: este teste prova isso
+  // com um .env num diretório temporário, sem nunca tocar no backend/.env.
+  it("lê o .env do diretório atual (base do isolamento dos outros cenários)", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "config-env-"));
+    fs.writeFileSync(path.join(dir, ".env"), "NODE_ENV=development\n");
+    const script = `console.log(JSON.stringify(require(${JSON.stringify(CONFIG_PATH)}).config.isDevelopment))`;
+    const output = execFileSync(process.execPath, ["-e", script], {
+      cwd: dir,
+      env: { PATH: process.env.PATH },
+      encoding: "utf8",
+    });
+    assert.equal(JSON.parse(output.trim().split("\n").pop()), true);
+  });
+
+  it("sem NODE_ENV, todo o app se comporta como produção", () => {
+    assert.equal(loadConfig({}, "c.config.isProduction"), true);
   });
 });

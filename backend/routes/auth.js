@@ -1,6 +1,6 @@
 const express = require("express");
 const { User } = require("../models");
-const { startSession, destroySession } = require("../lib/session");
+const { startSession, logout } = require("../lib/session");
 const userService = require("../services/user-service");
 
 function redirectFor(user) {
@@ -24,11 +24,7 @@ function createAuthRouter({ authLimiter }) {
     res.json({ success: true, user: user.toSessionUser(), redirectTo: redirectFor(user) });
   });
 
-  router.post("/logout", async (req, res) => {
-    await destroySession(req);
-    res.clearCookie("connect.sid", { path: "/" });
-    res.json({ success: true, message: "Logout realizado" });
-  });
+  router.post("/logout", logout);
 
   return router;
 }

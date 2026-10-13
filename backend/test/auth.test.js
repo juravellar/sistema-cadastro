@@ -217,6 +217,7 @@ describe("auth", () => {
     for (const [method, path] of [
       ["post", "/api/login"],
       ["post", "/api/signup"],
+      ["get", "/api/logout"],
       ["get", "/api/user/profile"],
       ["put", "/api/user/password"],
       ["get", "/api/user/id/1"],
