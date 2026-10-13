@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { api, AUTH_CHANGED_EVENT } from "../lib/api";
 
 const AuthContext = createContext();
@@ -18,21 +18,24 @@ export const AuthProvider = ({ children }) => {
   // servidor). Os guards de rota usam isso para escolher o aviso da tela de login.
   const [sessionEnd, setSessionEnd] = useState(null);
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const { ok, data } = await api.me.get();
-      setUser(ok && data.success ? data.user : null);
-    } catch (error) {
-      console.error("Erro ao verificar autenticação:", error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    let active = true;
+    api.me
+      .get()
+      .then(({ ok, data }) => (ok && data.success ? data.user : null))
+      .catch((error) => {
+        console.error("Erro ao verificar autenticação:", error);
+        return null;
+      })
+      .then((profile) => {
+        if (!active) return;
+        setUser(profile);
+        setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const revalidate = async () => {
@@ -93,7 +96,6 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
-    checkAuth,
     updateUser: setUser,
   };
 

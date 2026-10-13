@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
@@ -6,6 +6,12 @@ import UserFormModal from "../components/UserFormModal";
 
 const PAGE_SIZE = 20;
 const ROLE_LABELS = { admin: "Administrador", user: "Usuário" };
+
+async function fetchUsersPage(offset) {
+  const { ok, data } = await api.users.list({ limit: PAGE_SIZE, offset });
+  if (!ok) throw new Error(data.message || "Erro ao buscar usuários");
+  return { users: data.users, total: data.total, offset };
+}
 
 function HomeAdmin() {
   const { user: currentUser, logout } = useAuth();
@@ -16,23 +22,35 @@ function HomeAdmin() {
   const [error, setError] = useState("");
   const [modal, setModal] = useState(null);
 
-  const loadUsers = useCallback(async (nextOffset) => {
-    try {
-      const { ok, data } = await api.users.list({ limit: PAGE_SIZE, offset: nextOffset });
-      if (!ok) throw new Error(data.message || "Erro ao buscar usuários");
-      setUsers(data.users);
-      setTotal(data.total);
-      setOffset(nextOffset);
-      setError("");
-    } catch (err) {
-      setError(err.message || "Erro ao buscar usuários");
-    } finally {
-      setIsLoading(false);
-    }
+  // Só a resposta da requisição mais recente é aplicada: uma página pedida
+  // antes não pode sobrescrever outra pedida depois, nem chegar com o
+  // componente já fora da tela.
+  const latestRequest = useRef(0);
+
+  const loadUsers = useCallback((nextOffset) => {
+    const request = ++latestRequest.current;
+    const isLatest = () => request === latestRequest.current;
+    return fetchUsersPage(nextOffset)
+      .then((page) => {
+        if (!isLatest()) return;
+        setUsers(page.users);
+        setTotal(page.total);
+        setOffset(page.offset);
+        setError("");
+      })
+      .catch((err) => {
+        if (isLatest()) setError(err.message || "Erro ao buscar usuários");
+      })
+      .finally(() => {
+        if (isLatest()) setIsLoading(false);
+      });
   }, []);
 
   useEffect(() => {
     loadUsers(0);
+    return () => {
+      latestRequest.current += 1;
+    };
   }, [loadUsers]);
 
   const closeModal = () => setModal(null);
