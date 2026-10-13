@@ -20,8 +20,9 @@ const BCRYPT_ROUNDS = 10;
 // resposta e impede descobrir quais e-mails estão cadastrados. É um hash fixo
 // (de um valor aleatório descartado), com o mesmo custo de BCRYPT_ROUNDS: gerar
 // em tempo de execução criaria uma janela no boot e um modo de falha que
-// voltariam a diferenciar e-mails. Ao mudar BCRYPT_ROUNDS, gere outro:
-// node -e 'console.log(require("bcrypt").hashSync(require("crypto").randomBytes(32).toString("hex"), 10))'
+// voltariam a diferenciar e-mails. Ao mudar BCRYPT_ROUNDS, gere outro com o
+// novo custo no lugar de <ROUNDS> (o teste de user-service acusa se esquecer):
+// node -e 'console.log(require("bcrypt").hashSync(require("crypto").randomBytes(32).toString("hex"), <ROUNDS>))'
 const DUMMY_PASSWORD_HASH = "$2b$10$mo/BwktrGUfxVK1rC.pGaOFsdP/SA9l7u5443HI2Mg/5ZwOayWA1O";
 
 const PUBLIC_ATTRIBUTES = ["id", "username", "email", "role"];
@@ -180,8 +181,6 @@ async function deleteUser({ actorId, user }) {
 }
 
 module.exports = {
-  BCRYPT_ROUNDS,
-  DUMMY_PASSWORD_HASH,
   toPublicUser,
   hashPassword,
   register,
