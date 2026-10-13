@@ -122,7 +122,7 @@ O servidor serve o build do frontend pelo nginx, roda o backend no PM2 (porta 30
 
 ### Primeira instalação
 
-1. Clone o repositório no servidor e crie `backend/.env` com, no mínimo, `NODE_ENV=production`, `SESSION_SECRET` e as variáveis `PG*` (veja o [.env.example](.env.example)). O backend não inicia sem `SESSION_SECRET` em produção. Para gerar um segredo:
+1. Clone o repositório no servidor e crie `backend/.env` com, no mínimo, `NODE_ENV=production`, `SESSION_SECRET` e as variáveis `PG*` (veja o [.env.example](.env.example)). O backend só inicia sem `SESSION_SECRET` com `NODE_ENV=development` ou `test`; em qualquer outro caso, inclusive sem `NODE_ENV`, ele é obrigatório. Para gerar um segredo:
    ```bash
    node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
    ```
@@ -204,7 +204,8 @@ As rotas anteriores à padronização REST (`/api/login`, `/api/user/profile`, `
 
 ## Segurança
 
-- `SESSION_SECRET` obrigatório em produção, e `WEBHOOK_SECRET` obrigatório para o webhook iniciar
+- `SESSION_SECRET` obrigatório fora de `NODE_ENV=development`/`test` (inclusive sem `NODE_ENV`), e `WEBHOOK_SECRET` obrigatório para o webhook iniciar
+- Sem `NODE_ENV=development`, o error handler nunca devolve stack trace e o cookie de sessão é `Secure` por padrão
 - Rate limit em login, cadastro e troca de senha
 - Mensagem de erro de login genérica, que não revela se o e-mail existe
 - Validação de entrada no backend (senha de 8 a 72 bytes)

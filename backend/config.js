@@ -1,7 +1,10 @@
 require("dotenv").config({ quiet: true });
 
-const env = process.env.NODE_ENV || "development";
 const isProduction = process.env.NODE_ENV === "production";
+// Defaults inseguros (segredo de sessão fixo, cookie sem Secure) só valem
+// quando o ambiente local é declarado explicitamente. Um servidor sem NODE_ENV
+// é tratado como produção nesses pontos.
+const isLocal = ["development", "test"].includes(process.env.NODE_ENV);
 
 const TRUE_VALUES = new Set(["true", "1", "yes"]);
 const FALSE_VALUES = new Set(["false", "0", "no"]);
@@ -26,7 +29,6 @@ function parsePort(name, value, fallback) {
 // Lido na importação: o Sequelize é criado quando models/ é carregado, e
 // migrate, create-admin e o servidor precisam do banco.
 const config = Object.freeze({
-  env,
   isProduction,
   // Só com NODE_ENV=development explícito: o error handler devolve o stack
   // trace nesse modo, e um servidor sem NODE_ENV não pode vazá-lo.
@@ -46,15 +48,17 @@ const config = Object.freeze({
 // nessas variáveis não pode impedir migrate e create-admin de rodar.
 function serverConfig() {
   const sessionSecret = process.env.SESSION_SECRET;
-  if (!sessionSecret && isProduction) {
-    throw new Error("SESSION_SECRET é obrigatório em produção");
+  if (!sessionSecret && !isLocal) {
+    throw new Error(
+      "SESSION_SECRET é obrigatório fora de NODE_ENV=development/test (inclusive sem NODE_ENV)"
+    );
   }
   return {
     port: parsePort("PORT", process.env.PORT, 3002),
     sessionSecret: sessionSecret || "dev-only-session-secret",
     // Desligar o cookie Secure só faz sentido quando o acesso não passa por
     // HTTPS (ex.: compose de produção acessado por HTTP).
-    secureCookie: parseBoolean("COOKIE_SECURE", process.env.COOKIE_SECURE, isProduction),
+    secureCookie: parseBoolean("COOKIE_SECURE", process.env.COOKIE_SECURE, !isLocal),
     sessionMaxAgeMs: 24 * 60 * 60 * 1000,
   };
 }

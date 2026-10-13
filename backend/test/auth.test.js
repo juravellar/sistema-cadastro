@@ -98,6 +98,16 @@ describe("auth", () => {
       assert.equal(res.status, 400);
     });
 
+    for (const email of ["a@b.c1", "a@b.123", "a@b_c.com", "a@-b.com"]) {
+      it(`recusa ${email} com "Email inválido", como o model faria`, async () => {
+        const res = await request(app)
+          .post("/api/auth/signup")
+          .send({ username: "x", email, password: PASSWORD });
+        assert.equal(res.status, 400);
+        assert.equal(res.body.message, "Email inválido");
+      });
+    }
+
     it("cadastros simultâneos com o mesmo e-mail: um cria, o outro recebe 409", async () => {
       const body = { username: "x", email: "corrida@example.com", password: PASSWORD };
       const results = await Promise.all([
@@ -207,7 +217,6 @@ describe("auth", () => {
     for (const [method, path] of [
       ["post", "/api/login"],
       ["post", "/api/signup"],
-      ["post", "/api/logout"],
       ["get", "/api/user/profile"],
       ["put", "/api/user/password"],
       ["get", "/api/user/id/1"],
@@ -216,6 +225,16 @@ describe("auth", () => {
       assert.equal(res.status, 410, `${method.toUpperCase()} ${path}`);
       assert.match(res.body.message, /Recarregue a página/);
     }
+  });
+
+  it("o logout antigo ainda encerra a sessão (aba aberta antes do deploy)", async () => {
+    await createUser({ email: "aba@example.com" });
+    const agent = await loginAgent(app, "aba@example.com");
+
+    const res = await agent.post("/api/logout");
+
+    assert.equal(res.status, 200);
+    assert.equal((await agent.get("/api/me")).status, 401);
   });
 
   it("rota desconhecida retorna 404 JSON", async () => {

@@ -1,8 +1,6 @@
+const isEmail = require("validator/lib/isEmail");
 const { ValidationError } = require("./errors");
 
-// Domínio final com 2+ letras, como o validator isEmail do model exige:
-// sem isso o e-mail passa aqui e falha no banco.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/;
 const MAX_FIELD_LENGTH = 200;
 const MIN_PASSWORD_LENGTH = 8;
 // bcrypt ignora silenciosamente tudo além de 72 bytes.
@@ -20,7 +18,9 @@ function validateRole(role) {
 
 function validateEmail(email) {
   if (typeof email !== "string" || !email.trim()) return "Email é obrigatório";
-  if (email.length > MAX_FIELD_LENGTH || !EMAIL_RE.test(email)) return "Email inválido";
+  // Mesmo validador (e mesmas opções) do "validate: { isEmail: true }" do model:
+  // um e-mail aceito aqui não pode ser recusado pelo banco.
+  if (email.length > MAX_FIELD_LENGTH || !isEmail(email)) return "Email inválido";
   return null;
 }
 

@@ -4,8 +4,9 @@ const http = require("http");
 const createApp = require("../app");
 const { serverConfig } = require("../config");
 
-const { port } = serverConfig();
-const app = createApp();
+const settings = serverConfig();
+const { port } = settings;
+const app = createApp({ server: settings });
 app.set("port", port);
 
 const server = http.createServer(app);

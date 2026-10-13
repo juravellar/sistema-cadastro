@@ -17,8 +17,13 @@ const {
 
 const BCRYPT_ROUNDS = 10;
 // Comparar contra um hash real quando o e-mail não existe iguala o tempo de
-// resposta e impede descobrir quais e-mails estão cadastrados.
-const DUMMY_HASH = bcrypt.hashSync("dummy-password-for-timing", BCRYPT_ROUNDS);
+// resposta e impede descobrir quais e-mails estão cadastrados. Calculado no
+// primeiro login, para não pesar em scripts que só importam o serviço.
+let dummyHash;
+function getDummyHash() {
+  dummyHash ??= bcrypt.hashSync("dummy-password-for-timing", BCRYPT_ROUNDS);
+  return dummyHash;
+}
 const PUBLIC_ATTRIBUTES = ["id", "username", "email", "role"];
 const LAST_ADMIN_MESSAGE = "O sistema precisa de pelo menos um administrador.";
 
@@ -79,7 +84,7 @@ async function authenticate({ email, password }) {
   }
 
   const user = await User.findOne({ where: { email: normalizeEmail(email) } });
-  const passwordMatches = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
+  const passwordMatches = await bcrypt.compare(password, user ? user.password : getDummyHash());
   if (!user || !passwordMatches) throw new AuthenticationError("Credenciais inválidas");
   return user;
 }
