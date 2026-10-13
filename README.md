@@ -37,6 +37,7 @@ sistema-cadastro/
 ├── .github/                    # CI, template de PR, Dependabot
 ├── DOCKER.md                   # detalhes do uso com Docker (dev e produção)
 ├── CONTRIBUTING.md             # convenções do projeto
+├── LICENSE                     # licença MIT
 └── .env.example                # todas as variáveis de ambiente
 ```
 
@@ -228,4 +229,4 @@ As rotas anteriores à padronização REST (`/api/login`, `/api/user/profile`, `
 
 ## Licença
 
-ISC.
+[MIT](LICENSE) © 2025-2026 Júllia R Avellar. Você pode usar, modificar e distribuir o código, desde que mantenha o aviso de copyright e a licença.
