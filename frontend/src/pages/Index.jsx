@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 function Index() {
@@ -7,6 +7,7 @@ function Index() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const notice = useLocation().state?.notice;
   const { login, signup } = useAuth();
 
   const [loginEmail, setLoginEmail] = useState("");
@@ -125,6 +126,11 @@ function Index() {
   return (
     <div className="container-fluid d-flex align-items-center justify-content-center min-vh-100 p-3">
       <div className="main-container">
+        {notice && (
+          <div className="alert alert-warning" role="status">
+            {notice}
+          </div>
+        )}
         <ul className="nav nav-tabs" id="authTabs" role="tablist">
           <li className="nav-item flex-fill" role="presentation">
             <button

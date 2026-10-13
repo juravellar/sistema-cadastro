@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { apiRequest } from "../lib/api";
 
 const AuthContext = createContext();
 
@@ -10,26 +11,17 @@ export const useAuth = () => {
   return context;
 };
 
-async function postJson(url, body) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-    credentials: "include",
-  });
-  const data = await response.json().catch(() => ({}));
-  return { ok: response.ok, data };
-}
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Distingue "saiu pelo botão Sair" de "tentou abrir página protegida sem login",
+  // para os guards de rota não exibirem aviso de acesso indevido após o logout.
+  const [hasSignedOut, setHasSignedOut] = useState(false);
 
   const checkAuth = useCallback(async () => {
     try {
-      const response = await fetch("/api/user/profile", { credentials: "include" });
-      const data = response.ok ? await response.json() : null;
-      setUser(data?.success ? data.user : null);
+      const { ok, data } = await apiRequest("GET", "/api/user/profile");
+      setUser(ok && data.success ? data.user : null);
     } catch (error) {
       console.error("Erro ao verificar autenticação:", error);
       setUser(null);
@@ -44,9 +36,10 @@ export const AuthProvider = ({ children }) => {
 
   const authenticate = async (url, body, fallbackMessage) => {
     try {
-      const { data } = await postJson(url, body);
+      const { data } = await apiRequest("POST", url, body);
       if (data.success && data.user) {
         setUser(data.user);
+        setHasSignedOut(false);
         return { success: true, redirectTo: data.redirectTo };
       }
       return { success: false, message: data.message || fallbackMessage };
@@ -64,10 +57,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await postJson("/api/logout");
+      await apiRequest("POST", "/api/logout");
     } catch (error) {
       console.error("Erro no logout:", error);
     } finally {
+      setHasSignedOut(true);
       setUser(null);
     }
   };
@@ -77,6 +71,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: Boolean(user),
     isAdmin: user?.role === "admin",
     isLoading,
+    hasSignedOut,
     login,
     signup,
     logout,
