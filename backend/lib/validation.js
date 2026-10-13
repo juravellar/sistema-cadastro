@@ -1,3 +1,5 @@
+const { ValidationError } = require("./errors");
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_FIELD_LENGTH = 200;
 const MIN_PASSWORD_LENGTH = 8;
@@ -42,6 +44,11 @@ function firstError(...errors) {
   return errors.find(Boolean) || null;
 }
 
+function assertValid(...errors) {
+  const error = firstError(...errors);
+  if (error) throw new ValidationError(error);
+}
+
 function parseId(raw) {
   return /^\d+$/.test(raw) ? Number(raw) : null;
 }
@@ -53,5 +60,6 @@ module.exports = {
   validatePassword,
   validateUsername,
   firstError,
+  assertValid,
   parseId,
 };
