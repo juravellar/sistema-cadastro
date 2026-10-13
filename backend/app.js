@@ -3,6 +3,7 @@ const logger = require("morgan");
 const session = require("express-session");
 const cors = require("cors");
 const createApiRouter = require("./routes");
+const userService = require("./services/user-service");
 const { config, serverConfig } = require("./config");
 const { SESSION_COOKIE } = require("./lib/session");
 
@@ -22,6 +23,7 @@ function statusFromDatabaseError(err) {
 }
 
 function createApp({ sessionStore, authRateLimit, server = serverConfig() } = {}) {
+  userService.warmUp();
   const app = express();
 
   // Atrás de nginx: necessário para req.ip correto (rate limit) e cookie secure.

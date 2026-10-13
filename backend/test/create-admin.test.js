@@ -31,7 +31,10 @@ function runCreateAdmin(env) {
 describe("npm run create-admin", () => {
   before(setupDatabase);
   beforeEach(resetUsers);
-  after(closeDatabase);
+  after(async () => {
+    fs.rmSync(EMPTY_DIR, { recursive: true, force: true });
+    await closeDatabase();
+  });
 
   it("cria um admin com e-mail normalizado", async () => {
     const run = runCreateAdmin({

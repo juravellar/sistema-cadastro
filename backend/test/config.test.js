@@ -1,4 +1,4 @@
-const { describe, it } = require("node:test");
+const { describe, it, after } = require("node:test");
 const assert = require("node:assert/strict");
 const { execFileSync } = require("child_process");
 const fs = require("fs");
@@ -22,6 +22,8 @@ function loadConfig(env, expression) {
 }
 
 describe("config", () => {
+  const tempDirs = [EMPTY_DIR];
+  after(() => tempDirs.forEach((dir) => fs.rmSync(dir, { recursive: true, force: true })));
   it("NODE_ENV ausente não liga o modo de desenvolvimento", () => {
     assert.equal(loadConfig({}, "c.config.isDevelopment"), false);
   });
@@ -30,8 +32,11 @@ describe("config", () => {
     assert.equal(loadConfig({ NODE_ENV: "development" }, "c.config.isDevelopment"), true);
   });
 
-  it("sem NODE_ENV, o servidor exige SESSION_SECRET", () => {
-    assert.throws(() => loadConfig({}, "c.serverConfig()"), /SESSION_SECRET/);
+  it("sem NODE_ENV, o servidor exige SESSION_SECRET e explica como rodar localmente", () => {
+    assert.throws(
+      () => loadConfig({}, "c.serverConfig()"),
+      /SESSION_SECRET[\s\S]*NODE_ENV=development/
+    );
   });
 
   it("sem NODE_ENV, o cookie é Secure por padrão", () => {
@@ -85,6 +90,7 @@ describe("config", () => {
   // com um .env num diretório temporário, sem nunca tocar no backend/.env.
   it("lê o .env do diretório atual (base do isolamento dos outros cenários)", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "config-env-"));
+    tempDirs.push(dir);
     fs.writeFileSync(path.join(dir, ".env"), "NODE_ENV=development\n");
     const script = `console.log(JSON.stringify(require(${JSON.stringify(CONFIG_PATH)}).config.isDevelopment))`;
     const output = execFileSync(process.execPath, ["-e", script], {

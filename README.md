@@ -89,7 +89,7 @@ ADMIN_EMAIL=voce@exemplo.com ADMIN_PASSWORD='senha-forte-aqui' npm run create-ad
 cd ..
 ```
 
-Suba backend (nodemon) e frontend (Vite) juntos, com hot reload:
+Suba backend (nodemon) e frontend (Vite) juntos, com hot reload. O `npm run dev` já roda o backend com `NODE_ENV=development`, mesmo que o `backend/.env` diga outra coisa:
 
 ```bash
 npm run dev

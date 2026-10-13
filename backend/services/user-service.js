@@ -17,13 +17,21 @@ const {
 
 const BCRYPT_ROUNDS = 10;
 // Comparar contra um hash real quando o e-mail não existe iguala o tempo de
-// resposta e impede descobrir quais e-mails estão cadastrados. Gerado de forma
-// assíncrona no primeiro uso: na importação pesaria nos scripts, e com hashSync
-// travaria o servidor durante o primeiro login.
+// resposta e impede descobrir quais e-mails estão cadastrados. O app chama
+// warmUp() ao subir, para que o primeiro login não pague o custo do hash (o que
+// revelaria que o e-mail não existe). Uma falha na geração não fica guardada:
+// a próxima chamada tenta de novo.
 let dummyHashPromise;
 function getDummyHash() {
-  dummyHashPromise ??= bcrypt.hash("dummy-password-for-timing", BCRYPT_ROUNDS);
+  dummyHashPromise ??= bcrypt.hash("dummy-password-for-timing", BCRYPT_ROUNDS).catch((err) => {
+    dummyHashPromise = undefined;
+    throw err;
+  });
   return dummyHashPromise;
+}
+
+function warmUp() {
+  return getDummyHash().catch((err) => console.error("Falha ao preparar o login:", err.message));
 }
 const PUBLIC_ATTRIBUTES = ["id", "username", "email", "role"];
 const LAST_ADMIN_MESSAGE = "O sistema precisa de pelo menos um administrador.";
@@ -87,7 +95,7 @@ async function authenticate({ email, password }) {
   const user = await User.findOne({ where: { email: normalizeEmail(email) } });
   const passwordMatches = await bcrypt.compare(
     password,
-    user ? user.password : await getDummyHash()
+    user ? user.password : await getDummyHash().catch(getDummyHash)
   );
   if (!user || !passwordMatches) throw new AuthenticationError("Credenciais inválidas");
   return user;
@@ -181,6 +189,7 @@ async function deleteUser({ actorId, user }) {
 }
 
 module.exports = {
+  warmUp,
   toPublicUser,
   hashPassword,
   register,

@@ -48,7 +48,8 @@ function serverConfig() {
   const sessionSecret = process.env.SESSION_SECRET;
   if (!sessionSecret && isProduction) {
     throw new Error(
-      "SESSION_SECRET é obrigatório fora de NODE_ENV=development/test (inclusive sem NODE_ENV)"
+      "SESSION_SECRET é obrigatório fora de NODE_ENV=development/test (inclusive sem NODE_ENV). " +
+        "Para rodar localmente, defina NODE_ENV=development (o npm run dev já define)."
     );
   }
   return {
