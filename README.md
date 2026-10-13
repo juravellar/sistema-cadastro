@@ -200,8 +200,12 @@ npm run migrate:down     # Reverte a última migration
 npm run create-admin     # Cria/promove admin (ADMIN_EMAIL, ADMIN_PASSWORD)
 npm test                 # Testes de integração (Postgres em localhost:55432, ou TEST_PG*)
 
+# Raiz
+npm test                 # Testes do webhook + backend
+
 # Frontend (dentro de frontend/)
 npm run lint             # ESLint
+npm test                 # Vitest + Testing Library
 npm run build            # Build de produção
 
 # Utilidades
@@ -223,7 +227,10 @@ cd backend && npm test
 * Todo tráfego `/api/*` é roteado para o backend, que monta todas as rotas sob `/api`.
 * **PostgreSQL** + **Sequelize**, com schema versionado por migrations (`backend/db/migrations`).
 * Autenticação por **sessão** (cookie `httpOnly`), com sessões persistidas no Postgres (`connect-pg-simple`).
-* Autorização por papel (`role`: `user` | `admin`). O cadastro público sempre cria `user`. Admins só são criados via `npm run create-admin`.
+* Autorização por papel (`role`: `user` | `admin`). O cadastro público sempre cria `user`. O primeiro admin é criado com `npm run create-admin`; depois disso, admins criam usuários e alteram perfis pelo painel.
+* O usuário da sessão é relido do banco a cada requisição: rebaixar ou excluir alguém tira o acesso na hora.
+* E-mails são guardados em minúsculas, sem espaços nas pontas. A migration `004-normalize-emails` aborta, sem alterar nada, se houver contas que só diferem na caixa; exclua ou altere as extras e rode `npm run migrate` de novo.
+* CI no GitHub Actions (`.github/workflows/ci.yml`): testes, lint, build e audit em cada PR.
 
 ---
 
@@ -231,7 +238,7 @@ cd backend && npm test
 
 * Cadastro de usuários
 * Login e autenticação por sessão
-* Rotas protegidas e painel administrativo (listar, editar e excluir usuários)
+* Rotas protegidas e painel administrativo: criar, listar (paginado), editar, alterar perfil e excluir usuários
 * Integração completa com PostgreSQL
 * Interface em React
 
@@ -244,6 +251,7 @@ cd backend && npm test
 * ID de sessão regenerado no login
 * Mensagem de erro de login genérica (não revela se o e-mail existe)
 * Validação de entrada no backend (senha de 8 a 72 bytes)
+* O admin não altera o próprio perfil nem exclui a própria conta, e o sistema nunca fica sem administrador
 * Webhook de deploy exige `WEBHOOK_SECRET` e valida a assinatura HMAC do GitHub
 
 ---
