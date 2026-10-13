@@ -66,7 +66,10 @@ describe("conta do próprio usuário", () => {
 
     it("valida os campos", async () => {
       assert.equal((await agent.patch("/api/user/profile").send({ username: "" })).status, 400);
-      assert.equal((await agent.patch("/api/user/profile").send({ email: "invalido" })).status, 400);
+      assert.equal(
+        (await agent.patch("/api/user/profile").send({ email: "invalido" })).status,
+        400
+      );
     });
 
     it("exige login", async () => {

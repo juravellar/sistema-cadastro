@@ -26,7 +26,10 @@ function badRequest(res, message) {
 }
 
 function parsePagination(query) {
-  const limit = Math.min(Math.max(parseInt(query.limit, 10) || DEFAULT_PAGE_SIZE, 1), MAX_PAGE_SIZE);
+  const limit = Math.min(
+    Math.max(parseInt(query.limit, 10) || DEFAULT_PAGE_SIZE, 1),
+    MAX_PAGE_SIZE
+  );
   const offset = Math.max(parseInt(query.offset, 10) || 0, 0);
   return { limit, offset };
 }
@@ -174,27 +177,33 @@ router.put("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, async (
   }
 });
 
-router.delete("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, async (req, res, next) => {
-  const user = req.targetUser;
+router.delete(
+  "/user/id/:id",
+  requireAdmin,
+  requireValidId,
+  loadTargetUser,
+  async (req, res, next) => {
+    const user = req.targetUser;
 
-  try {
-    if (user.id === req.session.user.id) {
-      return badRequest(res, "Você não pode excluir sua própria conta.");
+    try {
+      if (user.id === req.session.user.id) {
+        return badRequest(res, "Você não pode excluir sua própria conta.");
+      }
+      const deleted = await sequelize.transaction(async (transaction) => {
+        if (await wouldRemoveLastAdmin(user, transaction)) return false;
+        await user.destroy({ transaction });
+        return true;
+      });
+      if (!deleted) return badRequest(res, LAST_ADMIN_MESSAGE);
+      res.json({
+        success: true,
+        message: `Usuário com id ${user.id} deletado com sucesso.`,
+        user: toPublicUser(user),
+      });
+    } catch (err) {
+      next(err);
     }
-    const deleted = await sequelize.transaction(async (transaction) => {
-      if (await wouldRemoveLastAdmin(user, transaction)) return false;
-      await user.destroy({ transaction });
-      return true;
-    });
-    if (!deleted) return badRequest(res, LAST_ADMIN_MESSAGE);
-    res.json({
-      success: true,
-      message: `Usuário com id ${user.id} deletado com sucesso.`,
-      user: toPublicUser(user),
-    });
-  } catch (err) {
-    next(err);
   }
-});
+);
 
 module.exports = router;

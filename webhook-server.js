@@ -91,7 +91,9 @@ function createWebhookApp({
 if (require.main === module) {
   const port = Number(process.env.WEBHOOK_PORT) || 3003;
   if (!process.env.WEBHOOK_SECRET) {
-    console.error("❌ WEBHOOK_SECRET não definido. Recusando iniciar sem verificação de assinatura.");
+    console.error(
+      "❌ WEBHOOK_SECRET não definido. Recusando iniciar sem verificação de assinatura."
+    );
     process.exit(1);
   }
   createWebhookApp({ secret: process.env.WEBHOOK_SECRET }).listen(port, () => {

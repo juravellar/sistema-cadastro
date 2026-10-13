@@ -1,10 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
-import {
-  ProtectedRoute,
-  AdminRoute,
-  PublicRoute,
-} from "./components/ProtectedRoute";
+import { ProtectedRoute, AdminRoute, PublicRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Home from "./pages/Home";
 import HomeAdmin from "./pages/HomeAdmin";

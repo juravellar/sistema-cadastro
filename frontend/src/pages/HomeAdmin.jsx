@@ -91,7 +91,11 @@ function HomeAdmin() {
 
         <div className="d-flex justify-content-between align-items-center mb-3 mt-4">
           <h2 className="mb-0">Usuários</h2>
-          <button type="button" className="btn btn-success" onClick={() => setModal({ type: "create" })}>
+          <button
+            type="button"
+            className="btn btn-success"
+            onClick={() => setModal({ type: "create" })}
+          >
             Novo Usuário
           </button>
         </div>
@@ -144,7 +148,10 @@ function HomeAdmin() {
         </table>
 
         {total > PAGE_SIZE && (
-          <nav className="d-flex justify-content-between align-items-center mb-3" aria-label="Paginação">
+          <nav
+            className="d-flex justify-content-between align-items-center mb-3"
+            aria-label="Paginação"
+          >
             <button
               type="button"
               className="btn btn-outline-secondary"
@@ -182,12 +189,21 @@ function HomeAdmin() {
       )}
 
       {modal?.type === "delete" && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Excluir Usuário</h5>
-                <button type="button" className="btn-close" aria-label="Fechar" onClick={closeModal} />
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Fechar"
+                  onClick={closeModal}
+                />
               </div>
               <div className="modal-body">
                 <p>

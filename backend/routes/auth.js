@@ -79,9 +79,7 @@ function createAuthRouter({ authRateLimit = 10 } = {}) {
   router.post("/login", authLimiter, async (req, res, next) => {
     const { email, password } = req.body;
     if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email e senha são obrigatórios" });
+      return res.status(400).json({ success: false, message: "Email e senha são obrigatórios" });
     }
 
     try {

@@ -38,7 +38,10 @@ function AccountForm({ user, onSaved }) {
 
       <form onSubmit={handleSubmit}>
         {status && (
-          <div className={`alert alert-${status.type}`} role={status.type === "danger" ? "alert" : "status"}>
+          <div
+            className={`alert alert-${status.type}`}
+            role={status.type === "danger" ? "alert" : "status"}
+          >
             {status.message}
           </div>
         )}

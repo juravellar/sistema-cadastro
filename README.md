@@ -147,17 +147,17 @@ Para deploy manual, rode `npm run deploy:aapanel` no servidor.
 
 ## Scripts
 
-| Onde | Comando | O que faz |
-|---|---|---|
-| raiz | `npm run dev` | Backend (nodemon) + frontend (Vite) |
-| raiz | `npm run install:all` | Instala dependências da raiz, backend e frontend |
-| raiz | `npm test` | Testes do webhook + backend |
-| raiz | `npm run deploy:aapanel` | Deploy no servidor |
-| raiz | `npm run pm2:start` / `pm2:restart` / `pm2:logs` | Backend no PM2 |
-| raiz | `npm run webhook:start` / `webhook:logs` | Webhook no PM2 |
-| backend | `npm run migrate` / `migrate:down` | Aplica migrations pendentes / reverte a última |
-| backend | `npm run create-admin` | Cria ou promove admin (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) |
-| frontend | `npm run build` | Build de produção em `frontend/dist` |
+| Onde     | Comando                                          | O que faz                                               |
+| -------- | ------------------------------------------------ | ------------------------------------------------------- |
+| raiz     | `npm run dev`                                    | Backend (nodemon) + frontend (Vite)                     |
+| raiz     | `npm run install:all`                            | Instala dependências da raiz, backend e frontend        |
+| raiz     | `npm test`                                       | Testes do webhook + backend                             |
+| raiz     | `npm run deploy:aapanel`                         | Deploy no servidor                                      |
+| raiz     | `npm run pm2:start` / `pm2:restart` / `pm2:logs` | Backend no PM2                                          |
+| raiz     | `npm run webhook:start` / `webhook:logs`         | Webhook no PM2                                          |
+| backend  | `npm run migrate` / `migrate:down`               | Aplica migrations pendentes / reverte a última          |
+| backend  | `npm run create-admin`                           | Cria ou promove admin (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) |
+| frontend | `npm run build`                                  | Build de produção em `frontend/dist`                    |
 
 ---
 

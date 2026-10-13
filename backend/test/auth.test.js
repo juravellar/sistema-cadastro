@@ -68,7 +68,10 @@ describe("auth", () => {
     for (const [caso, body] of [
       ["sem senha", { username: "a", email: "a@example.com" }],
       ["senha curta", { username: "a", email: "a@example.com", password: "1234567" }],
-      ["senha acima de 72 bytes", { username: "a", email: "a@example.com", password: "x".repeat(73) }],
+      [
+        "senha acima de 72 bytes",
+        { username: "a", email: "a@example.com", password: "x".repeat(73) },
+      ],
       ["email inválido", { username: "a", email: "nao-e-email", password: PASSWORD }],
       ["sem username", { email: "a@example.com", password: PASSWORD }],
       ["username longo", { username: "u".repeat(201), email: "a@example.com", password: PASSWORD }],
@@ -143,8 +146,12 @@ describe("auth", () => {
       await createUser({ email: "fix@example.com" });
       const agent = request.agent(app);
 
-      const first = await agent.post("/api/login").send({ email: "fix@example.com", password: PASSWORD });
-      const second = await agent.post("/api/login").send({ email: "fix@example.com", password: PASSWORD });
+      const first = await agent
+        .post("/api/login")
+        .send({ email: "fix@example.com", password: PASSWORD });
+      const second = await agent
+        .post("/api/login")
+        .send({ email: "fix@example.com", password: PASSWORD });
 
       assert.ok(sessionCookie(first));
       assert.ok(sessionCookie(second));
@@ -154,7 +161,9 @@ describe("auth", () => {
     it("aplica rate limit", async () => {
       const limitedApp = buildApp({ authRateLimit: 2 });
       const attempt = () =>
-        request(limitedApp).post("/api/login").send({ email: "a@example.com", password: "qualquer-1" });
+        request(limitedApp)
+          .post("/api/login")
+          .send({ email: "a@example.com", password: "qualquer-1" });
 
       assert.equal((await attempt()).status, 401);
       assert.equal((await attempt()).status, 401);

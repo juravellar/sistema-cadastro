@@ -59,9 +59,12 @@ describe("users (admin)", () => {
 
   describe("POST /api/users", () => {
     it("cria usuário com o perfil informado", async () => {
-      const res = await adminAgent
-        .post("/api/users")
-        .send({ username: "nova", email: "Nova@Example.com", password: "senha-segura-123", role: "admin" });
+      const res = await adminAgent.post("/api/users").send({
+        username: "nova",
+        email: "Nova@Example.com",
+        password: "senha-segura-123",
+        role: "admin",
+      });
 
       assert.equal(res.status, 201);
       assert.deepEqual(
@@ -77,7 +80,10 @@ describe("users (admin)", () => {
         .send({ username: "nova", email: "nova@example.com", password: "senha-segura-123" });
 
       assert.equal(res.body.user.role, "user");
-      assert.equal((await adminAgent.get("/api/user/profile")).body.user.email, "admin@example.com");
+      assert.equal(
+        (await adminAgent.get("/api/user/profile")).body.user.email,
+        "admin@example.com"
+      );
     });
 
     it("aceita e-mail com espaços nas pontas", async () => {
@@ -107,9 +113,12 @@ describe("users (admin)", () => {
     it("exige admin", async () => {
       await createUser({ email: "comum@example.com" });
       const userAgent = await loginAgent(app, "comum@example.com");
-      const res = await userAgent
-        .post("/api/users")
-        .send({ username: "x", email: "x@example.com", password: "senha-segura-123", role: "admin" });
+      const res = await userAgent.post("/api/users").send({
+        username: "x",
+        email: "x@example.com",
+        password: "senha-segura-123",
+        role: "admin",
+      });
       assert.equal(res.status, 403);
     });
   });
@@ -170,7 +179,9 @@ describe("users (admin)", () => {
 
     it("aceita alterar só a caixa do próprio e-mail", async () => {
       const target = await createUser({ email: "alvo@example.com" });
-      const res = await adminAgent.put(`/api/user/id/${target.id}`).send({ email: "ALVO@example.com" });
+      const res = await adminAgent
+        .put(`/api/user/id/${target.id}`)
+        .send({ email: "ALVO@example.com" });
       assert.equal(res.status, 200);
       assert.equal(res.body.user.email, "alvo@example.com");
     });
@@ -192,7 +203,11 @@ describe("users (admin)", () => {
 
   describe("concorrência", () => {
     async function twoAdmins() {
-      const other = await createUser({ email: "admin2@example.com", role: "admin", username: "admin2" });
+      const other = await createUser({
+        email: "admin2@example.com",
+        role: "admin",
+        username: "admin2",
+      });
       const otherAgent = await loginAgent(app, "admin2@example.com");
       return { other, otherAgent };
     }

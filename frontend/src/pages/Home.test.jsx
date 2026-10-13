@@ -53,34 +53,51 @@ describe("home do usuário", () => {
     const name = within(accountSection()).getByLabelText("Nome");
     await userEvent.clear(name);
     await userEvent.type(name, "Maria Souza");
-    await userEvent.click(within(accountSection()).getByRole("button", { name: "Salvar alterações" }));
+    await userEvent.click(
+      within(accountSection()).getByRole("button", { name: "Salvar alterações" })
+    );
 
-    expect(await within(accountSection()).findByRole("status")).toHaveTextContent("Dados atualizados.");
+    expect(await within(accountSection()).findByRole("status")).toHaveTextContent(
+      "Dados atualizados."
+    );
     const [[, options]] = callsTo(fetchMock, "PATCH", "/api/user/profile");
     expect(JSON.parse(options.body)).toEqual({ username: "Maria Souza", email: USER.email });
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/, Maria!$/);
-    expect(within(screen.getByRole("region", { name: "Seu perfil" })).getByText("Maria Souza")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Seu perfil" })).getByText("Maria Souza")
+    ).toBeInTheDocument();
   });
 
   it("mostra o erro da API ao salvar os dados", async () => {
     renderHome({
-      "PATCH /api/user/profile": () => [409, { success: false, message: "Email já cadastrado por outro usuário." }],
+      "PATCH /api/user/profile": () => [
+        409,
+        { success: false, message: "Email já cadastrado por outro usuário." },
+      ],
     });
     await screen.findByRole("region", { name: "Dados da conta" });
 
     const email = within(accountSection()).getByLabelText("Email");
     await userEvent.clear(email);
     await userEvent.type(email, "joana@example.com");
-    await userEvent.click(within(accountSection()).getByRole("button", { name: "Salvar alterações" }));
+    await userEvent.click(
+      within(accountSection()).getByRole("button", { name: "Salvar alterações" })
+    );
 
-    expect(await within(accountSection()).findByRole("alert")).toHaveTextContent("Email já cadastrado");
+    expect(await within(accountSection()).findByRole("alert")).toHaveTextContent(
+      "Email já cadastrado"
+    );
   });
 
   it("não envia a troca de senha se a confirmação não confere", async () => {
     const fetchMock = renderHome();
     await screen.findByRole("region", { name: "Alterar senha" });
 
-    await fillPassword({ current: "senha-atual-123", next: "nova-senha-456", confirm: "outra-senha-789" });
+    await fillPassword({
+      current: "senha-atual-123",
+      next: "nova-senha-456",
+      confirm: "outra-senha-789",
+    });
 
     expect(within(passwordSection()).getByRole("alert")).toHaveTextContent("não confere");
     expect(callsTo(fetchMock, "PUT", "/api/user/password")).toHaveLength(0);
@@ -92,9 +109,15 @@ describe("home do usuário", () => {
     });
     await screen.findByRole("region", { name: "Alterar senha" });
 
-    await fillPassword({ current: "senha-atual-123", next: "nova-senha-456", confirm: "nova-senha-456" });
+    await fillPassword({
+      current: "senha-atual-123",
+      next: "nova-senha-456",
+      confirm: "nova-senha-456",
+    });
 
-    expect(await within(passwordSection()).findByRole("status")).toHaveTextContent("Senha alterada");
+    expect(await within(passwordSection()).findByRole("status")).toHaveTextContent(
+      "Senha alterada"
+    );
     const [[, options]] = callsTo(fetchMock, "PUT", "/api/user/password");
     expect(JSON.parse(options.body)).toEqual({
       currentPassword: "senha-atual-123",
@@ -109,9 +132,15 @@ describe("home do usuário", () => {
     });
     await screen.findByRole("region", { name: "Alterar senha" });
 
-    await fillPassword({ current: "errada-000000", next: "nova-senha-456", confirm: "nova-senha-456" });
+    await fillPassword({
+      current: "errada-000000",
+      next: "nova-senha-456",
+      confirm: "nova-senha-456",
+    });
 
-    expect(await within(passwordSection()).findByRole("alert")).toHaveTextContent("Senha atual incorreta");
+    expect(await within(passwordSection()).findByRole("alert")).toHaveTextContent(
+      "Senha atual incorreta"
+    );
   });
 
   it("mostra o link do painel só para admin", async () => {
@@ -121,7 +150,10 @@ describe("home do usuário", () => {
   });
 
   it("admin volta ao painel pelo cabeçalho", async () => {
-    mockApi({ sessionUser: ADMIN, routes: { "GET /api/users": () => [200, { success: true, users: [ADMIN], total: 1 }] } });
+    mockApi({
+      sessionUser: ADMIN,
+      routes: { "GET /api/users": () => [200, { success: true, users: [ADMIN], total: 1 }] },
+    });
     window.history.pushState({}, "", "/home");
     render(<App />);
 
@@ -130,4 +162,3 @@ describe("home do usuário", () => {
     expect(await screen.findByRole("heading", { name: "Usuários" })).toBeInTheDocument();
   });
 });
-

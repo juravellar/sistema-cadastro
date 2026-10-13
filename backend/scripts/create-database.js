@@ -20,10 +20,9 @@ async function createDatabase() {
   });
 
   try {
-    const [results] = await adminSequelize.query(
-      "SELECT 1 FROM pg_database WHERE datname = $1",
-      { bind: [PGDATABASE] }
-    );
+    const [results] = await adminSequelize.query("SELECT 1 FROM pg_database WHERE datname = $1", {
+      bind: [PGDATABASE],
+    });
 
     if (results.length === 0) {
       const identifier = adminSequelize.getQueryInterface().quoteIdentifier(PGDATABASE);
