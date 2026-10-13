@@ -1,6 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const { User } = require("../models");
+const { sequelize, User } = require("../models");
 const { requireAdmin } = require("../middlewares/auth");
 const {
   normalizeEmail,
@@ -37,10 +37,21 @@ function emailTaken(email, exceptId) {
   );
 }
 
-async function isLastAdmin(user) {
+// As linhas de admin ficam travadas (SELECT ... FOR UPDATE) até o fim da
+// transação. Sem isso, dois admins que se rebaixam ou se excluem ao mesmo
+// tempo passam ambos pela checagem e o sistema fica sem nenhum admin.
+async function wouldRemoveLastAdmin(user, transaction) {
   if (user.role !== User.ROLES.ADMIN) return false;
-  return (await User.count({ where: { role: User.ROLES.ADMIN } })) <= 1;
+  const admins = await User.findAll({
+    where: { role: User.ROLES.ADMIN },
+    attributes: ["id"],
+    lock: transaction.LOCK.UPDATE,
+    transaction,
+  });
+  return admins.length <= 1;
 }
+
+const LAST_ADMIN_MESSAGE = "O sistema precisa de pelo menos um administrador.";
 
 function requireValidId(req, res, next) {
   const id = parseId(req.params.id);
@@ -129,21 +140,24 @@ router.put("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, async (
     if (changesRole && user.id === req.session.user.id) {
       return badRequest(res, "Você não pode alterar o seu próprio perfil.");
     }
-    if (changesRole && (await isLastAdmin(user))) {
-      return badRequest(res, "O sistema precisa de pelo menos um administrador.");
-    }
     if (email !== undefined && (await emailTaken(email, user.id))) {
       return res
         .status(409)
         .json({ success: false, message: "Email já cadastrado por outro usuário." });
     }
 
-    if (email !== undefined) user.email = email;
-    if (username !== undefined) user.username = username.trim();
-    if (password) user.password = await bcrypt.hash(password, BCRYPT_ROUNDS);
-    if (changesRole) user.role = role;
+    const passwordHash = password ? await bcrypt.hash(password, BCRYPT_ROUNDS) : null;
+    const saved = await sequelize.transaction(async (transaction) => {
+      if (changesRole && (await wouldRemoveLastAdmin(user, transaction))) return false;
 
-    await user.save();
+      if (email !== undefined) user.email = email;
+      if (username !== undefined) user.username = username.trim();
+      if (passwordHash) user.password = passwordHash;
+      if (changesRole) user.role = role;
+      await user.save({ transaction });
+      return true;
+    });
+    if (!saved) return badRequest(res, LAST_ADMIN_MESSAGE);
 
     res.json({
       success: true,
@@ -162,11 +176,12 @@ router.delete("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, asyn
     if (user.id === req.session.user.id) {
       return badRequest(res, "Você não pode excluir sua própria conta.");
     }
-    if (await isLastAdmin(user)) {
-      return badRequest(res, "O sistema precisa de pelo menos um administrador.");
-    }
-
-    await user.destroy();
+    const deleted = await sequelize.transaction(async (transaction) => {
+      if (await wouldRemoveLastAdmin(user, transaction)) return false;
+      await user.destroy({ transaction });
+      return true;
+    });
+    if (!deleted) return badRequest(res, LAST_ADMIN_MESSAGE);
     res.json({
       success: true,
       message: `Usuário com id ${user.id} deletado com sucesso.`,
