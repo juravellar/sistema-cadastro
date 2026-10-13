@@ -45,7 +45,7 @@ O schema é versionado em `backend/db/migrations` (Umzug). O backend **não** al
 docker compose exec backend npm run migrate        # aplica pendentes
 docker compose exec backend npm run migrate:down   # reverte a última
 docker compose exec postgres psql -U postgres -d sistema_cadastro
-docker compose exec postgres pg_dump -U postgres sistema_cadastro > backup.sql
+docker compose exec -T postgres pg_dump -U postgres sistema_cadastro > backup.sql
 ```
 
 ## 📦 Dockerfiles
