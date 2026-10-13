@@ -91,6 +91,22 @@ describe("auth", () => {
       assert.equal(res.body.user.email, "ana@example.com");
     });
 
+    it("recusa e-mail que o model recusaria, com 400 em vez de 500", async () => {
+      const res = await request(app)
+        .post("/api/auth/signup")
+        .send({ username: "x", email: "user@x.c", password: PASSWORD });
+      assert.equal(res.status, 400);
+    });
+
+    it("cadastros simultâneos com o mesmo e-mail: um cria, o outro recebe 409", async () => {
+      const body = { username: "x", email: "corrida@example.com", password: PASSWORD };
+      const results = await Promise.all([
+        request(app).post("/api/auth/signup").send(body),
+        request(app).post("/api/auth/signup").send(body),
+      ]);
+      assert.deepEqual(results.map((r) => r.status).sort(), [201, 409]);
+    });
+
     it("retorna 409 para e-mail duplicado, mesmo com outra caixa", async () => {
       await createUser({ email: "dup@example.com" });
       const res = await request(app)
@@ -187,15 +203,18 @@ describe("auth", () => {
     });
   });
 
-  it("as rotas anteriores à padronização REST não existem mais", async () => {
+  it("rotas anteriores à padronização REST pedem para recarregar a página", async () => {
     for (const [method, path] of [
       ["post", "/api/login"],
       ["post", "/api/signup"],
+      ["post", "/api/logout"],
       ["get", "/api/user/profile"],
+      ["put", "/api/user/password"],
       ["get", "/api/user/id/1"],
     ]) {
       const res = await request(app)[method](path);
-      assert.equal(res.status, 404, `${method.toUpperCase()} ${path}`);
+      assert.equal(res.status, 410, `${method.toUpperCase()} ${path}`);
+      assert.match(res.body.message, /Recarregue a página/);
     }
   });
 

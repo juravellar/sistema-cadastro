@@ -14,6 +14,5 @@ const User = require("./user")(sequelize);
 
 module.exports = {
   sequelize,
-  connection: config.db,
   User,
 };

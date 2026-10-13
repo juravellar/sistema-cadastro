@@ -3,15 +3,28 @@ const logger = require("morgan");
 const session = require("express-session");
 const cors = require("cors");
 const createApiRouter = require("./routes");
-const { config, requireSessionSecret } = require("./config");
+const { config, serverConfig } = require("./config");
 
 function createPgSessionStore() {
   const PgSession = require("connect-pg-simple")(session);
-  const { connection } = require("./models");
-  return new PgSession({ conObject: connection, tableName: "session" });
+  return new PgSession({ conObject: config.db, tableName: "session" });
+}
+
+// Erros que escapam da validação dos serviços: a regex de e-mail aceitar algo
+// que o validator do model recusa, ou dois cadastros simultâneos passarem pela
+// checagem de duplicidade e só o índice único barrar o segundo.
+function statusFromDatabaseError(err) {
+  if (err.name === "SequelizeUniqueConstraintError") {
+    return { status: 409, message: "Já existe um cadastro com esses dados." };
+  }
+  if (err.name === "SequelizeValidationError") {
+    return { status: 400, message: "Dados inválidos." };
+  }
+  return null;
 }
 
 function createApp({ sessionStore, authRateLimit } = {}) {
+  const server = serverConfig();
   const app = express();
 
   // Atrás de nginx: necessário para req.ip correto (rate limit) e cookie secure.
@@ -35,15 +48,15 @@ function createApp({ sessionStore, authRateLimit } = {}) {
   app.use(
     session({
       store: sessionStore || createPgSessionStore(),
-      secret: requireSessionSecret(),
+      secret: server.sessionSecret,
       resave: false,
       saveUninitialized: false,
       name: "connect.sid",
       cookie: {
-        secure: config.session.secureCookie,
+        secure: server.secureCookie,
         httpOnly: true,
         sameSite: "lax",
-        maxAge: config.session.maxAgeMs,
+        maxAge: server.sessionMaxAgeMs,
         path: "/",
       },
     })
@@ -60,11 +73,12 @@ function createApp({ sessionStore, authRateLimit } = {}) {
   });
 
   app.use((err, req, res, next) => {
-    const status = err.status || err.statusCode || 500;
+    const databaseError = statusFromDatabaseError(err);
+    const status = databaseError?.status || err.status || err.statusCode || 500;
     if (status >= 500) console.error(err);
     res.status(status).json({
       success: false,
-      message: status >= 500 ? "Erro interno do servidor" : err.message,
+      message: databaseError?.message || (status >= 500 ? "Erro interno do servidor" : err.message),
       ...(config.isDevelopment && { stack: err.stack }),
     });
   });
