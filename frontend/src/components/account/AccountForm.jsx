@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { apiRequest } from "../../lib/api";
+import { api } from "../../lib/api";
 
 function AccountForm({ user, onSaved }) {
   const [form, setForm] = useState({ username: user.username, email: user.email });
@@ -17,7 +17,7 @@ function AccountForm({ user, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    const { ok, data } = await apiRequest("PATCH", "/api/user/profile", form);
+    const { ok, data } = await api.me.update(form);
     setIsSaving(false);
 
     if (!ok) {

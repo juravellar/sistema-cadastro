@@ -41,7 +41,7 @@ async function createUser({ email, role = "user", username = "user" }) {
 
 async function loginAgent(app, email) {
   const agent = request.agent(app);
-  const res = await agent.post("/api/login").send({ email, password: PASSWORD });
+  const res = await agent.post("/api/auth/login").send({ email, password: PASSWORD });
   if (res.status !== 200) throw new Error(`login falhou: ${res.status}`);
   return agent;
 }

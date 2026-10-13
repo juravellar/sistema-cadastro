@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { apiRequest } from "../../lib/api";
+import { api } from "../../lib/api";
 
 const MIN_LENGTH = 8;
 const EMPTY = { currentPassword: "", newPassword: "", confirmPassword: "" };
@@ -29,7 +29,7 @@ function PasswordForm() {
     }
 
     setIsSaving(true);
-    const { ok, data } = await apiRequest("PUT", "/api/user/password", {
+    const { ok, data } = await api.me.changePassword({
       currentPassword: form.currentPassword,
       newPassword: form.newPassword,
     });

@@ -1,11 +1,6 @@
 const { User } = require("../models");
 const { AuthenticationError, ForbiddenError } = require("../lib/errors");
-
-function destroySession(req) {
-  return new Promise((resolve, reject) => {
-    req.session.destroy((err) => (err ? reject(err) : resolve()));
-  });
-}
+const { destroySession } = require("../lib/session");
 
 // O usuário é relido do banco a cada requisição: sem isso, quem foi excluído
 // ou perdeu o perfil de admin manteria o acesso até a sessão expirar.

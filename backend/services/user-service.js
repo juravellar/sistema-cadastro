@@ -153,7 +153,7 @@ async function updateUser({ actorId, user, changes }) {
     throw new ValidationError("Você não pode alterar o seu próprio perfil.");
   }
   // A troca da própria senha exige a senha atual e regenera a sessão, o que só
-  // changePassword (PUT /api/user/password) faz. Aqui ela encerraria a sessão
+  // changePassword (PUT /api/me/password) faz. Aqui ela encerraria a sessão
   // de quem pediu.
   if (password && isSelf) {
     throw new ValidationError("Para trocar a sua senha, use a página Minha conta.");

@@ -26,72 +26,69 @@ describe("conta do próprio usuário", () => {
   });
   after(closeDatabase);
 
-  describe("GET /api/user/profile", () => {
+  describe("GET /api/me", () => {
     it("inclui a data de cadastro", async () => {
-      const res = await agent.get("/api/user/profile");
+      const res = await agent.get("/api/me");
       assert.equal(res.status, 200);
       assert.ok(!Number.isNaN(Date.parse(res.body.user.createdAt)));
     });
   });
 
-  describe("PATCH /api/user/profile", () => {
+  describe("PATCH /api/me", () => {
     it("atualiza nome e e-mail normalizado", async () => {
       const res = await agent
-        .patch("/api/user/profile")
+        .patch("/api/me")
         .send({ username: "  Maria Silva ", email: "Maria.Silva@Example.com" });
 
       assert.equal(res.status, 200);
       assert.equal(res.body.user.username, "Maria Silva");
       assert.equal(res.body.user.email, "maria.silva@example.com");
-      assert.equal((await agent.get("/api/user/profile")).body.user.username, "Maria Silva");
+      assert.equal((await agent.get("/api/me")).body.user.username, "Maria Silva");
     });
 
     it("aceita e-mail com espaços nas pontas", async () => {
-      const res = await agent.patch("/api/user/profile").send({ email: "  Maria2@Example.com " });
+      const res = await agent.patch("/api/me").send({ email: "  Maria2@Example.com " });
       assert.equal(res.status, 200);
       assert.equal(res.body.user.email, "maria2@example.com");
     });
 
     it("não permite mudar o próprio perfil por aqui", async () => {
-      const res = await agent.patch("/api/user/profile").send({ role: "admin" });
+      const res = await agent.patch("/api/me").send({ role: "admin" });
       assert.equal(res.status, 200);
       assert.equal(res.body.user.role, "user");
     });
 
     it("retorna 409 para e-mail de outra pessoa", async () => {
       await createUser({ email: "joana@example.com" });
-      const res = await agent.patch("/api/user/profile").send({ email: "JOANA@example.com" });
+      const res = await agent.patch("/api/me").send({ email: "JOANA@example.com" });
       assert.equal(res.status, 409);
     });
 
     it("valida os campos", async () => {
-      assert.equal((await agent.patch("/api/user/profile").send({ username: "" })).status, 400);
-      assert.equal(
-        (await agent.patch("/api/user/profile").send({ email: "invalido" })).status,
-        400
-      );
+      assert.equal((await agent.patch("/api/me").send({ username: "" })).status, 400);
+      assert.equal((await agent.patch("/api/me").send({ email: "invalido" })).status, 400);
     });
 
     it("exige login", async () => {
-      const res = await request(app).patch("/api/user/profile").send({ username: "x" });
+      const res = await request(app).patch("/api/me").send({ username: "x" });
       assert.equal(res.status, 401);
     });
   });
 
-  describe("PUT /api/user/password", () => {
+  describe("PUT /api/me/password", () => {
     it("troca a senha e mantém a sessão atual", async () => {
       const res = await agent
-        .put("/api/user/password")
+        .put("/api/me/password")
         .send({ currentPassword: PASSWORD, newPassword: NEW_PASSWORD });
 
       assert.equal(res.status, 200);
-      assert.equal((await agent.get("/api/user/profile")).status, 200);
+      assert.equal((await agent.get("/api/me")).status, 200);
 
       const oldLogin = await request(app)
-        .post("/api/login")
+        .post("/api/auth/login")
         .send({ email: "maria@example.com", password: PASSWORD });
       const newLogin = await request(app)
-        .post("/api/login")
+        .post("/api/auth/login")
         .send({ email: "maria@example.com", password: NEW_PASSWORD });
       assert.equal(oldLogin.status, 401);
       assert.equal(newLogin.status, 200);
@@ -99,31 +96,31 @@ describe("conta do próprio usuário", () => {
 
     it("encerra as outras sessões abertas", async () => {
       const otherDevice = await loginAgent(app, "maria@example.com");
-      assert.equal((await otherDevice.get("/api/user/profile")).status, 200);
+      assert.equal((await otherDevice.get("/api/me")).status, 200);
 
       await agent
-        .put("/api/user/password")
+        .put("/api/me/password")
         .send({ currentPassword: PASSWORD, newPassword: NEW_PASSWORD });
 
-      assert.equal((await otherDevice.get("/api/user/profile")).status, 401);
+      assert.equal((await otherDevice.get("/api/me")).status, 401);
     });
 
     it("recusa senha atual incorreta sem alterar nada", async () => {
       const res = await agent
-        .put("/api/user/password")
+        .put("/api/me/password")
         .send({ currentPassword: "senha-errada-000", newPassword: NEW_PASSWORD });
 
       assert.equal(res.status, 400);
-      assert.equal((await agent.get("/api/user/profile")).status, 200);
+      assert.equal((await agent.get("/api/me")).status, 200);
       const login = await request(app)
-        .post("/api/login")
+        .post("/api/auth/login")
         .send({ email: "maria@example.com", password: PASSWORD });
       assert.equal(login.status, 200);
     });
 
     it("valida a nova senha", async () => {
       const res = await agent
-        .put("/api/user/password")
+        .put("/api/me/password")
         .send({ currentPassword: PASSWORD, newPassword: "curta" });
       assert.equal(res.status, 400);
     });
@@ -133,7 +130,7 @@ describe("conta do próprio usuário", () => {
       const limitedAgent = await loginAgent(limitedApp, "maria@example.com");
       const attempt = () =>
         limitedAgent
-          .put("/api/user/password")
+          .put("/api/me/password")
           .send({ currentPassword: "senha-errada-000", newPassword: NEW_PASSWORD });
 
       assert.equal((await attempt()).status, 400);
@@ -143,12 +140,12 @@ describe("conta do próprio usuário", () => {
   });
 
   it("senha redefinida pelo admin encerra as sessões do usuário", async () => {
-    const maria = (await agent.get("/api/user/profile")).body.user;
+    const maria = (await agent.get("/api/me")).body.user;
     await createUser({ email: "admin@example.com", role: "admin" });
     const admin = await loginAgent(app, "admin@example.com");
 
-    await admin.put(`/api/user/id/${maria.id}`).send({ password: NEW_PASSWORD });
+    await admin.put(`/api/users/${maria.id}`).send({ password: NEW_PASSWORD });
 
-    assert.equal((await agent.get("/api/user/profile")).status, 401);
+    assert.equal((await agent.get("/api/me")).status, 401);
   });
 });

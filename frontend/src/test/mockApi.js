@@ -22,9 +22,9 @@ export function mockApi({ sessionUser = null, routes = {} } = {}) {
   let currentUser = sessionUser;
 
   const defaults = {
-    "GET /api/user/profile": () =>
+    "GET /api/me": () =>
       currentUser ? [200, { success: true, user: currentUser }] : [401, { success: false }],
-    "POST /api/logout": () => {
+    "POST /api/auth/logout": () => {
       currentUser = null;
       return [200, { success: true }];
     },

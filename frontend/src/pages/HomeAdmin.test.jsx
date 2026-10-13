@@ -85,7 +85,7 @@ describe("painel admin", () => {
 
   it("promove outro usuário enviando o novo perfil", async () => {
     const { fetchMock } = renderAdminPanel({
-      "PUT /api/user/id/2": (body) => [200, { success: true, user: { ...USER, ...body } }],
+      "PUT /api/users/2": (body) => [200, { success: true, user: { ...USER, ...body } }],
     });
 
     await userEvent.click(within(await rowOf(USER.email)).getByRole("button", { name: "Editar" }));
@@ -93,7 +93,7 @@ describe("painel admin", () => {
     await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
 
     await screen.findByRole("heading", { name: "Usuários" });
-    const [[, options]] = callsTo(fetchMock, "PUT", "/api/user/id/2");
+    const [[, options]] = callsTo(fetchMock, "PUT", "/api/users/2");
     expect(JSON.parse(options.body)).toEqual({
       username: USER.username,
       email: USER.email,
@@ -125,7 +125,7 @@ describe("painel admin", () => {
   it("admin rebaixado durante o uso vai para a home", async () => {
     let api;
     api = renderAdminPanel({
-      "PUT /api/user/id/2": () => [403, { success: false, message: "Apenas administradores" }],
+      "PUT /api/users/2": () => [403, { success: false, message: "Apenas administradores" }],
     });
     await screen.findByRole("heading", { name: "Usuários" });
     api.fetchMock.setSessionUser({ ...ADMIN, role: "user" });

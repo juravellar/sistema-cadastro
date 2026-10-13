@@ -31,7 +31,7 @@ describe("users (admin)", () => {
     await createUser({ email: "comum@example.com" });
     const userAgent = await loginAgent(app, "comum@example.com");
     assert.equal((await userAgent.get("/api/users")).status, 403);
-    assert.equal((await userAgent.delete(`/api/user/id/${admin.id}`)).status, 403);
+    assert.equal((await userAgent.delete(`/api/users/${admin.id}`)).status, 403);
   });
 
   it("lista usuários paginados sem expor senha", async () => {
@@ -52,9 +52,9 @@ describe("users (admin)", () => {
   });
 
   it("valida o id", async () => {
-    assert.equal((await adminAgent.get("/api/user/id/abc")).status, 400);
-    assert.equal((await adminAgent.get("/api/user/id/1e3")).status, 400);
-    assert.equal((await adminAgent.get("/api/user/id/9999")).status, 404);
+    assert.equal((await adminAgent.get("/api/users/abc")).status, 400);
+    assert.equal((await adminAgent.get("/api/users/1e3")).status, 400);
+    assert.equal((await adminAgent.get("/api/users/9999")).status, 404);
   });
 
   describe("POST /api/users", () => {
@@ -80,10 +80,7 @@ describe("users (admin)", () => {
         .send({ username: "nova", email: "nova@example.com", password: "senha-segura-123" });
 
       assert.equal(res.body.user.role, "user");
-      assert.equal(
-        (await adminAgent.get("/api/user/profile")).body.user.email,
-        "admin@example.com"
-      );
+      assert.equal((await adminAgent.get("/api/me")).body.user.email, "admin@example.com");
     });
 
     it("aceita e-mail com espaços nas pontas", async () => {
@@ -123,12 +120,12 @@ describe("users (admin)", () => {
     });
   });
 
-  describe("PUT /api/user/id/:id", () => {
+  describe("PUT /api/users/:id", () => {
     it("atualiza campos e promove outro usuário", async () => {
       const target = await createUser({ email: "alvo@example.com" });
 
       const res = await adminAgent
-        .put(`/api/user/id/${target.id}`)
+        .put(`/api/users/${target.id}`)
         .send({ username: "novo", role: "admin" });
 
       assert.equal(res.status, 200);
@@ -137,13 +134,13 @@ describe("users (admin)", () => {
     });
 
     it("impede o admin de alterar o próprio perfil", async () => {
-      const res = await adminAgent.put(`/api/user/id/${admin.id}`).send({ role: "user" });
+      const res = await adminAgent.put(`/api/users/${admin.id}`).send({ role: "user" });
       assert.equal(res.status, 400);
     });
 
     it("recusa troca da própria senha pelo painel e mantém a sessão", async () => {
       const res = await adminAgent
-        .put(`/api/user/id/${admin.id}`)
+        .put(`/api/users/${admin.id}`)
         .send({ password: "outra-senha-forte-1" });
 
       assert.equal(res.status, 400);
@@ -152,14 +149,14 @@ describe("users (admin)", () => {
     });
 
     it("ainda permite ao admin editar o próprio nome", async () => {
-      const res = await adminAgent.put(`/api/user/id/${admin.id}`).send({ username: "Chefe" });
+      const res = await adminAgent.put(`/api/users/${admin.id}`).send({ username: "Chefe" });
       assert.equal(res.status, 200);
-      assert.equal((await adminAgent.get("/api/user/profile")).body.user.username, "Chefe");
+      assert.equal((await adminAgent.get("/api/me")).body.user.username, "Chefe");
     });
 
     it("rejeita perfil inválido", async () => {
       const target = await createUser({ email: "alvo@example.com" });
-      const res = await adminAgent.put(`/api/user/id/${target.id}`).send({ role: "root" });
+      const res = await adminAgent.put(`/api/users/${target.id}`).send({ role: "root" });
       assert.equal(res.status, 400);
     });
 
@@ -171,16 +168,16 @@ describe("users (admin)", () => {
       const other = (await adminAgent.get("/api/users")).body.users.find(
         (u) => u.email === "outro-admin@example.com"
       );
-      await adminAgent.put(`/api/user/id/${other.id}`).send({ role: "user" });
+      await adminAgent.put(`/api/users/${other.id}`).send({ role: "user" });
 
       assert.equal((await otherAgent.get("/api/users")).status, 403);
-      assert.equal((await otherAgent.get("/api/user/profile")).body.user.role, "user");
+      assert.equal((await otherAgent.get("/api/me")).body.user.role, "user");
     });
 
     it("aceita alterar só a caixa do próprio e-mail", async () => {
       const target = await createUser({ email: "alvo@example.com" });
       const res = await adminAgent
-        .put(`/api/user/id/${target.id}`)
+        .put(`/api/users/${target.id}`)
         .send({ email: "ALVO@example.com" });
       assert.equal(res.status, 200);
       assert.equal(res.body.user.email, "alvo@example.com");
@@ -189,14 +186,14 @@ describe("users (admin)", () => {
     it("retorna 409 para e-mail de outro usuário", async () => {
       const target = await createUser({ email: "alvo@example.com" });
       const res = await adminAgent
-        .put(`/api/user/id/${target.id}`)
+        .put(`/api/users/${target.id}`)
         .send({ email: "admin@example.com" });
       assert.equal(res.status, 409);
     });
 
     it("retorna 400 para senha inválida", async () => {
       const target = await createUser({ email: "alvo@example.com" });
-      const res = await adminAgent.put(`/api/user/id/${target.id}`).send({ password: "curta" });
+      const res = await adminAgent.put(`/api/users/${target.id}`).send({ password: "curta" });
       assert.equal(res.status, 400);
     });
   });
@@ -220,8 +217,8 @@ describe("users (admin)", () => {
       const { other, otherAgent } = await twoAdmins();
 
       const results = await Promise.all([
-        adminAgent.put(`/api/user/id/${other.id}`).send({ role: "user" }),
-        otherAgent.put(`/api/user/id/${admin.id}`).send({ role: "user" }),
+        adminAgent.put(`/api/users/${other.id}`).send({ role: "user" }),
+        otherAgent.put(`/api/users/${admin.id}`).send({ role: "user" }),
       ]);
 
       assert.equal(await adminCount(), 1);
@@ -232,8 +229,8 @@ describe("users (admin)", () => {
       const { other, otherAgent } = await twoAdmins();
 
       const results = await Promise.all([
-        adminAgent.delete(`/api/user/id/${other.id}`),
-        otherAgent.delete(`/api/user/id/${admin.id}`),
+        adminAgent.delete(`/api/users/${other.id}`),
+        otherAgent.delete(`/api/users/${admin.id}`),
       ]);
 
       assert.equal(await adminCount(), 1);
@@ -241,27 +238,27 @@ describe("users (admin)", () => {
     });
   });
 
-  describe("DELETE /api/user/id/:id", () => {
+  describe("DELETE /api/users/:id", () => {
     it("exclui outro usuário", async () => {
       const target = await createUser({ email: "alvo@example.com" });
 
-      const res = await adminAgent.delete(`/api/user/id/${target.id}`);
+      const res = await adminAgent.delete(`/api/users/${target.id}`);
 
       assert.equal(res.status, 200);
-      assert.equal((await adminAgent.get(`/api/user/id/${target.id}`)).status, 404);
+      assert.equal((await adminAgent.get(`/api/users/${target.id}`)).status, 404);
     });
 
     it("encerra a sessão de quem foi excluído", async () => {
       const target = await createUser({ email: "alvo@example.com" });
       const targetAgent = await loginAgent(app, "alvo@example.com");
 
-      await adminAgent.delete(`/api/user/id/${target.id}`);
+      await adminAgent.delete(`/api/users/${target.id}`);
 
-      assert.equal((await targetAgent.get("/api/user/profile")).status, 401);
+      assert.equal((await targetAgent.get("/api/me")).status, 401);
     });
 
     it("impede o admin de excluir a própria conta", async () => {
-      const res = await adminAgent.delete(`/api/user/id/${admin.id}`);
+      const res = await adminAgent.delete(`/api/users/${admin.id}`);
       assert.equal(res.status, 400);
     });
   });

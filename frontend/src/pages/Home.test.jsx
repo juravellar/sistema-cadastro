@@ -46,7 +46,7 @@ describe("home do usuário", () => {
 
   it("salva os dados e atualiza cabeçalho e cartão", async () => {
     const fetchMock = renderHome({
-      "PATCH /api/user/profile": (body) => [200, { success: true, user: { ...USER, ...body } }],
+      "PATCH /api/me": (body) => [200, { success: true, user: { ...USER, ...body } }],
     });
     await screen.findByRole("region", { name: "Dados da conta" });
 
@@ -60,7 +60,7 @@ describe("home do usuário", () => {
     expect(await within(accountSection()).findByRole("status")).toHaveTextContent(
       "Dados atualizados."
     );
-    const [[, options]] = callsTo(fetchMock, "PATCH", "/api/user/profile");
+    const [[, options]] = callsTo(fetchMock, "PATCH", "/api/me");
     expect(JSON.parse(options.body)).toEqual({ username: "Maria Souza", email: USER.email });
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/, Maria!$/);
     expect(
@@ -70,7 +70,7 @@ describe("home do usuário", () => {
 
   it("mostra o erro da API ao salvar os dados", async () => {
     renderHome({
-      "PATCH /api/user/profile": () => [
+      "PATCH /api/me": () => [
         409,
         { success: false, message: "Email já cadastrado por outro usuário." },
       ],
@@ -100,12 +100,12 @@ describe("home do usuário", () => {
     });
 
     expect(within(passwordSection()).getByRole("alert")).toHaveTextContent("não confere");
-    expect(callsTo(fetchMock, "PUT", "/api/user/password")).toHaveLength(0);
+    expect(callsTo(fetchMock, "PUT", "/api/me/password")).toHaveLength(0);
   });
 
   it("troca a senha e limpa o formulário", async () => {
     const fetchMock = renderHome({
-      "PUT /api/user/password": () => [200, { success: true }],
+      "PUT /api/me/password": () => [200, { success: true }],
     });
     await screen.findByRole("region", { name: "Alterar senha" });
 
@@ -118,7 +118,7 @@ describe("home do usuário", () => {
     expect(await within(passwordSection()).findByRole("status")).toHaveTextContent(
       "Senha alterada"
     );
-    const [[, options]] = callsTo(fetchMock, "PUT", "/api/user/password");
+    const [[, options]] = callsTo(fetchMock, "PUT", "/api/me/password");
     expect(JSON.parse(options.body)).toEqual({
       currentPassword: "senha-atual-123",
       newPassword: "nova-senha-456",
@@ -128,7 +128,7 @@ describe("home do usuário", () => {
 
   it("mostra quando a senha atual está errada", async () => {
     renderHome({
-      "PUT /api/user/password": () => [400, { success: false, message: "Senha atual incorreta" }],
+      "PUT /api/me/password": () => [400, { success: false, message: "Senha atual incorreta" }],
     });
     await screen.findByRole("region", { name: "Alterar senha" });
 

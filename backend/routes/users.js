@@ -25,22 +25,22 @@ async function loadTargetUser(req, res, next) {
 
 const router = express.Router();
 
-router.get("/users", requireAdmin, async (req, res) => {
+router.get("/", requireAdmin, async (req, res) => {
   const { limit, offset } = parsePagination(req.query);
   const { users, total } = await userService.listUsers({ limit, offset });
   res.json({ success: true, users, total, limit, offset });
 });
 
-router.post("/users", requireAdmin, async (req, res) => {
+router.post("/", requireAdmin, async (req, res) => {
   const user = await userService.createUser(req.body ?? {});
   res.status(201).json({ success: true, user: userService.toPublicUser(user) });
 });
 
-router.get("/user/id/:id", requireAdmin, loadTargetUser, (req, res) => {
+router.get("/:id", requireAdmin, loadTargetUser, (req, res) => {
   res.json({ success: true, user: userService.toPublicUser(req.targetUser) });
 });
 
-router.put("/user/id/:id", requireAdmin, loadTargetUser, async (req, res) => {
+router.put("/:id", requireAdmin, loadTargetUser, async (req, res) => {
   const user = await userService.updateUser({
     actorId: req.currentUser.id,
     user: req.targetUser,
@@ -53,7 +53,7 @@ router.put("/user/id/:id", requireAdmin, loadTargetUser, async (req, res) => {
   });
 });
 
-router.delete("/user/id/:id", requireAdmin, loadTargetUser, async (req, res) => {
+router.delete("/:id", requireAdmin, loadTargetUser, async (req, res) => {
   const user = await userService.deleteUser({
     actorId: req.currentUser.id,
     user: req.targetUser,

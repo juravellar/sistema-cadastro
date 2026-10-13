@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { apiRequest } from "../lib/api";
+import { api } from "../lib/api";
 import UserFormModal from "../components/UserFormModal";
 
 const PAGE_SIZE = 20;
@@ -18,10 +18,7 @@ function HomeAdmin() {
 
   const loadUsers = useCallback(async (nextOffset) => {
     try {
-      const { ok, data } = await apiRequest(
-        "GET",
-        `/api/users?limit=${PAGE_SIZE}&offset=${nextOffset}`
-      );
+      const { ok, data } = await api.users.list({ limit: PAGE_SIZE, offset: nextOffset });
       if (!ok) throw new Error(data.message || "Erro ao buscar usuários");
       setUsers(data.users);
       setTotal(data.total);
@@ -42,11 +39,9 @@ function HomeAdmin() {
 
   const saveUser = async (values) => {
     const isEdit = modal.type === "edit";
-    const { ok, data } = await apiRequest(
-      isEdit ? "PUT" : "POST",
-      isEdit ? `/api/user/id/${modal.user.id}` : "/api/users",
-      values
-    );
+    const { ok, data } = isEdit
+      ? await api.users.update(modal.user.id, values)
+      : await api.users.create(values);
     if (!ok) return data.message || "Erro ao salvar usuário";
 
     closeModal();
@@ -55,7 +50,7 @@ function HomeAdmin() {
   };
 
   const deleteUser = async () => {
-    const { ok, data } = await apiRequest("DELETE", `/api/user/id/${modal.user.id}`);
+    const { ok, data } = await api.users.remove(modal.user.id);
     closeModal();
     if (!ok) {
       setError(data.message || "Erro ao excluir usuário");
