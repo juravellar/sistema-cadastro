@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { apiRequest } from "../lib/api";
+import { apiRequest, AUTH_CHANGED_EVENT } from "../lib/api";
 
 const AuthContext = createContext();
 
@@ -11,16 +11,19 @@ export const useAuth = () => {
   return context;
 };
 
+const fetchProfile = () =>
+  apiRequest("GET", "/api/user/profile", undefined, { notifyAuthChange: false });
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  // Distingue "saiu pelo botão Sair" de "tentou abrir página protegida sem login",
-  // para os guards de rota não exibirem aviso de acesso indevido após o logout.
-  const [hasSignedOut, setHasSignedOut] = useState(false);
+  // Por que a sessão acabou: "signedOut" (botão Sair) ou "expired" (encerrada no
+  // servidor). Os guards de rota usam isso para escolher o aviso da tela de login.
+  const [sessionEnd, setSessionEnd] = useState(null);
 
   const checkAuth = useCallback(async () => {
     try {
-      const { ok, data } = await apiRequest("GET", "/api/user/profile");
+      const { ok, data } = await fetchProfile();
       setUser(ok && data.success ? data.user : null);
     } catch (error) {
       console.error("Erro ao verificar autenticação:", error);
@@ -34,12 +37,30 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, [checkAuth]);
 
+  useEffect(() => {
+    const revalidate = async () => {
+      try {
+        const { ok, data } = await fetchProfile();
+        if (ok && data.success) {
+          setUser(data.user);
+          return;
+        }
+        setSessionEnd("expired");
+        setUser(null);
+      } catch (error) {
+        console.error("Erro ao revalidar a sessão:", error);
+      }
+    };
+    window.addEventListener(AUTH_CHANGED_EVENT, revalidate);
+    return () => window.removeEventListener(AUTH_CHANGED_EVENT, revalidate);
+  }, []);
+
   const authenticate = async (url, body, fallbackMessage) => {
     try {
-      const { data } = await apiRequest("POST", url, body);
+      const { data } = await apiRequest("POST", url, body, { notifyAuthChange: false });
       if (data.success && data.user) {
         setUser(data.user);
-        setHasSignedOut(false);
+        setSessionEnd(null);
         return { success: true, redirectTo: data.redirectTo };
       }
       return { success: false, message: data.message || fallbackMessage };
@@ -57,11 +78,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await apiRequest("POST", "/api/logout");
+      await apiRequest("POST", "/api/logout", undefined, { notifyAuthChange: false });
     } catch (error) {
       console.error("Erro no logout:", error);
     } finally {
-      setHasSignedOut(true);
+      setSessionEnd("signedOut");
       setUser(null);
     }
   };
@@ -71,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: Boolean(user),
     isAdmin: user?.role === "admin",
     isLoading,
-    hasSignedOut,
+    sessionEnd,
     login,
     signup,
     logout,

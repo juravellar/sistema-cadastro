@@ -40,6 +40,10 @@ export function mockApi({ sessionUser = null, routes = {} } = {}) {
     return jsonResponse(status, json);
   });
 
+  fetchMock.setSessionUser = (user) => {
+    currentUser = user;
+  };
+
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
