@@ -1,5 +1,5 @@
 # Build context: raiz do repositório (ver docker-compose.prod.yml).
-FROM node:20 AS build
+FROM node:22 AS build
 WORKDIR /app
 COPY frontend/package*.json ./
 RUN npm ci
