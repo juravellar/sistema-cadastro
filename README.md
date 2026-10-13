@@ -35,7 +35,9 @@ sistema-cadastro/
 ├── docker-compose.yml          # desenvolvimento
 ├── docker-compose.prod.yml     # produção com Docker
 ├── .github/                    # CI, template de PR, Dependabot
+├── DOCKER.md                   # detalhes do uso com Docker (dev e produção)
 ├── CONTRIBUTING.md             # convenções do projeto
+├── LICENSE                     # licença MIT
 └── .env.example                # todas as variáveis de ambiente
 ```
 
@@ -57,8 +59,10 @@ O backend aplica as migrations antes de iniciar. Quando aparecer `🚀 Backend o
 docker compose exec -e ADMIN_EMAIL=voce@exemplo.com -e ADMIN_PASSWORD='senha-forte-aqui' backend npm run create-admin
 ```
 
+Depois, abra **http://localhost:5173** e entre com o e-mail e a senha do administrador.
+
 - Frontend: http://localhost:5173
-- API: http://localhost:3002/api
+- API: http://localhost:3002/api (ex.: http://localhost:3002/api/health)
 - Postgres: `localhost:5433` (usuário e senha `postgres`)
 
 As imagens copiam o código no build, então não há hot reload: depois de alterar o código, rode `docker compose up --build` de novo. Para hot reload, use a execução sem Docker.
@@ -111,9 +115,9 @@ O Vite encaminha `/api` para `http://localhost:3002`. Para outro endereço, defi
 # Postgres descartável para os testes do backend
 docker run -d --rm --name sc-test-pg -e POSTGRES_PASSWORD=postgres -p 55432:5432 postgres:16
 
-npm test                      # webhook + backend
-cd frontend && npm test       # Vitest + Testing Library
-cd frontend && npm run lint   # ESLint
+npm test                       # webhook + backend
+npm test --prefix frontend     # frontend (Vitest + Testing Library)
+npm run lint                   # ESLint em todo o projeto
 ```
 
 Os testes do backend usam o banco `sistema_cadastro_test` em `localhost:55432`. Para usar outro servidor, defina `TEST_PGHOST`, `TEST_PGPORT`, `TEST_PGUSER`, `TEST_PGPASSWORD` e `TEST_PGDATABASE`.
@@ -197,7 +201,7 @@ Todas as rotas ficam sob `/api` e respondem JSON no formato `{ success, message?
 
 Login, cadastro e troca de senha têm rate limit compartilhado (10 tentativas a cada 15 minutos por IP).
 
-As rotas anteriores à padronização REST (`/api/login`, `/api/user/profile`, `/api/user/id/:id` etc.) respondem **410** com "O sistema foi atualizado. Recarregue a página.", para avisar quem estiver com o frontend antigo aberto.
+As rotas anteriores à padronização REST (`/api/login`, `/api/user/profile`, `/api/user/id/:id` etc.) respondem **410** com "O sistema foi atualizado. Recarregue a página.", para avisar quem estiver com o frontend antigo aberto. A exceção é o `POST /api/logout` antigo, que continua encerrando a sessão.
 
 ---
 
@@ -225,4 +229,4 @@ As rotas anteriores à padronização REST (`/api/login`, `/api/user/profile`, `
 
 ## Licença
 
-ISC.
+[MIT](LICENSE) © 2025-2026 Júllia R Avellar. Você pode usar, modificar e distribuir o código, desde que mantenha o aviso de copyright e a licença.

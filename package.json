@@ -48,7 +48,7 @@
     "authentication"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "express": "^5.3.0"
   }
