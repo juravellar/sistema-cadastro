@@ -80,6 +80,14 @@ describe("auth", () => {
       });
     }
 
+    it("aceita e-mail com espaços nas pontas e guarda normalizado", async () => {
+      const res = await request(app)
+        .post("/api/signup")
+        .send({ username: "ana", email: "  Ana@Example.com ", password: PASSWORD });
+      assert.equal(res.status, 201);
+      assert.equal(res.body.user.email, "ana@example.com");
+    });
+
     it("retorna 409 para e-mail duplicado, mesmo com outra caixa", async () => {
       await createUser({ email: "dup@example.com" });
       const res = await request(app)

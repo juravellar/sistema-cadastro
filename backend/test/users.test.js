@@ -80,6 +80,14 @@ describe("users (admin)", () => {
       assert.equal((await adminAgent.get("/api/user/profile")).body.user.email, "admin@example.com");
     });
 
+    it("aceita e-mail com espaços nas pontas", async () => {
+      const res = await adminAgent
+        .post("/api/users")
+        .send({ username: "x", email: " nova@example.com  ", password: "senha-segura-123" });
+      assert.equal(res.status, 201);
+      assert.equal(res.body.user.email, "nova@example.com");
+    });
+
     it("retorna 409 para e-mail existente com outra caixa", async () => {
       const res = await adminAgent
         .post("/api/users")

@@ -96,7 +96,7 @@ router.post("/users", requireAdmin, async (req, res, next) => {
   const { username, email, password, role = User.ROLES.USER } = req.body;
   const error = firstError(
     validateUsername(username),
-    validateEmail(email),
+    validateEmail(normalizeEmail(email)),
     validatePassword(password),
     validateRole(role)
   );
@@ -127,7 +127,7 @@ router.put("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, async (
   const { username, email, password, role } = req.body;
   const error = firstError(
     username !== undefined && validateUsername(username),
-    email !== undefined && validateEmail(email),
+    email !== undefined && validateEmail(normalizeEmail(email)),
     password !== undefined && password !== "" && validatePassword(password),
     role !== undefined && validateRole(role)
   );

@@ -47,7 +47,7 @@ function createAuthRouter({ authRateLimit = 10 } = {}) {
     const { username, email, password } = req.body;
     const error = firstError(
       validateUsername(username),
-      validateEmail(email),
+      validateEmail(normalizeEmail(email)),
       validatePassword(password)
     );
     if (error) return res.status(400).json({ success: false, message: error });
