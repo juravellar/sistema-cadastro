@@ -6,7 +6,9 @@ const EMPTY_FORM = { username: "", email: "", password: "", role: "user" };
 function UserFormModal({ user, isSelf = false, onSubmit, onClose }) {
   const isEdit = Boolean(user);
   const [form, setForm] = useState(
-    isEdit ? { username: user.username, email: user.email, password: "", role: user.role } : EMPTY_FORM
+    isEdit
+      ? { username: user.username, email: user.email, password: "", role: user.role }
+      : EMPTY_FORM
   );
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -28,7 +30,11 @@ function UserFormModal({ user, isSelf = false, onSubmit, onClose }) {
   };
 
   return (
-    <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+    >
       <div className="modal-dialog">
         <form onSubmit={handleSubmit} className="modal-content" aria-label="Formulário de usuário">
           <div className="modal-header">

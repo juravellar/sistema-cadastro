@@ -3,6 +3,7 @@
 const path = require("path");
 const { Umzug, SequelizeStorage } = require("umzug");
 const { sequelize } = require("../models");
+const { config } = require("../config");
 const createDatabase = require("../scripts/create-database");
 
 function createMigrator() {
@@ -10,7 +11,7 @@ function createMigrator() {
     migrations: { glob: path.join(__dirname, "migrations", "*.js") },
     context: sequelize.getQueryInterface(),
     storage: new SequelizeStorage({ sequelize }),
-    logger: process.env.NODE_ENV === "test" ? undefined : console,
+    logger: config.isTest ? undefined : console,
   });
 }
 

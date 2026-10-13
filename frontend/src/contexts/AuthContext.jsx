@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { apiRequest, AUTH_CHANGED_EVENT } from "../lib/api";
+import { api, AUTH_CHANGED_EVENT } from "../lib/api";
 
 const AuthContext = createContext();
 
@@ -11,9 +11,6 @@ export const useAuth = () => {
   return context;
 };
 
-const fetchProfile = () =>
-  apiRequest("GET", "/api/user/profile", undefined, { notifyAuthChange: false });
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +20,7 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = useCallback(async () => {
     try {
-      const { ok, data } = await fetchProfile();
+      const { ok, data } = await api.me.get();
       setUser(ok && data.success ? data.user : null);
     } catch (error) {
       console.error("Erro ao verificar autenticação:", error);
@@ -40,7 +37,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const revalidate = async () => {
       try {
-        const { ok, data } = await fetchProfile();
+        const { ok, data } = await api.me.get();
         if (ok && data.success) {
           setUser(data.user);
           return;
@@ -55,9 +52,9 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener(AUTH_CHANGED_EVENT, revalidate);
   }, []);
 
-  const authenticate = async (url, body, fallbackMessage) => {
+  const authenticate = async (call, fallbackMessage) => {
     try {
-      const { data } = await apiRequest("POST", url, body, { notifyAuthChange: false });
+      const { data } = await call();
       if (data.success && data.user) {
         setUser(data.user);
         setSessionEnd(null);
@@ -71,14 +68,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = (email, password) =>
-    authenticate("/api/login", { email, password }, "Erro ao fazer login");
+    authenticate(() => api.auth.login({ email, password }), "Erro ao fazer login");
 
   const signup = (username, email, password) =>
-    authenticate("/api/signup", { username, email, password }, "Erro ao criar conta");
+    authenticate(() => api.auth.signup({ username, email, password }), "Erro ao criar conta");
 
   const logout = async () => {
     try {
-      await apiRequest("POST", "/api/logout", undefined, { notifyAuthChange: false });
+      await api.auth.logout();
     } catch (error) {
       console.error("Erro no logout:", error);
     } finally {

@@ -75,7 +75,9 @@ describe("painel admin", () => {
 
     const ownRow = await rowOf(ADMIN.email);
     expect(within(ownRow).queryByRole("button", { name: "Excluir" })).not.toBeInTheDocument();
-    expect(within(await rowOf(USER.email)).getByRole("button", { name: "Excluir" })).toBeInTheDocument();
+    expect(
+      within(await rowOf(USER.email)).getByRole("button", { name: "Excluir" })
+    ).toBeInTheDocument();
 
     await userEvent.click(within(ownRow).getByRole("button", { name: "Editar" }));
     expect(screen.getByLabelText("Perfil")).toBeDisabled();
@@ -83,7 +85,7 @@ describe("painel admin", () => {
 
   it("promove outro usuário enviando o novo perfil", async () => {
     const { fetchMock } = renderAdminPanel({
-      "PUT /api/user/id/2": (body) => [200, { success: true, user: { ...USER, ...body } }],
+      "PUT /api/users/2": (body) => [200, { success: true, user: { ...USER, ...body } }],
     });
 
     await userEvent.click(within(await rowOf(USER.email)).getByRole("button", { name: "Editar" }));
@@ -91,7 +93,7 @@ describe("painel admin", () => {
     await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
 
     await screen.findByRole("heading", { name: "Usuários" });
-    const [[, options]] = callsTo(fetchMock, "PUT", "/api/user/id/2");
+    const [[, options]] = callsTo(fetchMock, "PUT", "/api/users/2");
     expect(JSON.parse(options.body)).toEqual({
       username: USER.username,
       email: USER.email,
@@ -114,14 +116,16 @@ describe("painel admin", () => {
     await userEvent.type(within(form).getByLabelText("Senha"), "senha-segura-123");
     await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
 
-    expect(await screen.findByText("Sua sessão foi encerrada. Entre novamente.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Sua sessão foi encerrada. Entre novamente.")
+    ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/");
   });
 
   it("admin rebaixado durante o uso vai para a home", async () => {
     let api;
     api = renderAdminPanel({
-      "PUT /api/user/id/2": () => [403, { success: false, message: "Apenas administradores" }],
+      "PUT /api/users/2": () => [403, { success: false, message: "Apenas administradores" }],
     });
     await screen.findByRole("heading", { name: "Usuários" });
     api.fetchMock.setSessionUser({ ...ADMIN, role: "user" });
@@ -139,7 +143,10 @@ describe("painel admin", () => {
 
     const form = screen.getByRole("form", { name: "Formulário de usuário" });
     expect(within(form).queryByLabelText(/senha/i)).not.toBeInTheDocument();
-    expect(within(form).getByRole("link", { name: "Minha conta" })).toHaveAttribute("href", "/home");
+    expect(within(form).getByRole("link", { name: "Minha conta" })).toHaveAttribute(
+      "href",
+      "/home"
+    );
   });
 
   it("leva à página Minha conta pelo cabeçalho", async () => {
@@ -151,4 +158,3 @@ describe("painel admin", () => {
     expect(window.location.pathname).toBe("/home");
   });
 });
-

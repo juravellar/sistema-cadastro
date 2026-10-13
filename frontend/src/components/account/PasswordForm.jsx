@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { apiRequest } from "../../lib/api";
+import { api } from "../../lib/api";
 
 const MIN_LENGTH = 8;
 const EMPTY = { currentPassword: "", newPassword: "", confirmPassword: "" };
@@ -17,7 +17,10 @@ function PasswordForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.newPassword.length < MIN_LENGTH) {
-      setStatus({ type: "danger", message: `A nova senha deve ter pelo menos ${MIN_LENGTH} caracteres.` });
+      setStatus({
+        type: "danger",
+        message: `A nova senha deve ter pelo menos ${MIN_LENGTH} caracteres.`,
+      });
       return;
     }
     if (form.newPassword !== form.confirmPassword) {
@@ -26,7 +29,7 @@ function PasswordForm() {
     }
 
     setIsSaving(true);
-    const { ok, data } = await apiRequest("PUT", "/api/user/password", {
+    const { ok, data } = await api.me.changePassword({
       currentPassword: form.currentPassword,
       newPassword: form.newPassword,
     });
@@ -37,7 +40,10 @@ function PasswordForm() {
       return;
     }
     setForm(EMPTY);
-    setStatus({ type: "success", message: "Senha alterada. Suas outras sessões foram encerradas." });
+    setStatus({
+      type: "success",
+      message: "Senha alterada. Suas outras sessões foram encerradas.",
+    });
   };
 
   return (
@@ -51,7 +57,10 @@ function PasswordForm() {
 
       <form onSubmit={handleSubmit}>
         {status && (
-          <div className={`alert alert-${status.type}`} role={status.type === "danger" ? "alert" : "status"}>
+          <div
+            className={`alert alert-${status.type}`}
+            role={status.type === "danger" ? "alert" : "status"}
+          >
             {status.message}
           </div>
         )}

@@ -9,19 +9,21 @@ Cadastro e autenticação de usuários com **frontend em React (Vite)**, **backe
 ```
 sistema-cadastro/
 ├── backend/                    # API Express (todas as rotas sob /api)
-│   ├── app.js                  # createApp(): middlewares, sessão, rotas
+│   ├── app.js                  # createApp(): middlewares, sessão, rotas, error handler
+│   ├── config.js               # variáveis de ambiente, com defaults e validação
 │   ├── bin/www                 # sobe o servidor HTTP (porta 3002)
-│   ├── routes/                 # auth.js, users.js, index.js
+│   ├── routes/                 # HTTP: auth.js, me.js, users.js, index.js
+│   ├── services/               # regras de negócio (user-service.js)
 │   ├── middlewares/auth.js     # requireAuth / requireAdmin
 │   ├── models/                 # Sequelize (User)
-│   ├── lib/validation.js       # validação de entrada
+│   ├── lib/                    # errors.js, validation.js, session.js
 │   ├── db/migrate.js           # executor de migrations (Umzug)
 │   ├── db/migrations/          # schema versionado
 │   ├── scripts/                # create-database.js, create-admin.js
 │   ├── test/                   # testes de integração (node:test + supertest)
 │   └── ecosystem.config.js     # PM2
 ├── frontend/                   # SPA React (Vite + Bootstrap)
-│   └── src/                    # páginas, componentes, contexto de auth, testes
+│   └── src/                    # páginas, componentes, contexto de auth, cliente de API (lib/api.js), testes
 ├── webhook-server.js           # webhook do GitHub que dispara o deploy
 ├── webhook-ecosystem.config.js # PM2 do webhook
 ├── scripts/deploy-aapanel.sh   # deploy no servidor (pull, deps, migrations, build, restart)
@@ -30,7 +32,8 @@ sistema-cadastro/
 ├── nginx-config/               # configs do nginx do servidor (deploy.chatflows.com.br)
 ├── docker-compose.yml          # desenvolvimento
 ├── docker-compose.prod.yml     # produção com Docker
-├── .github/workflows/ci.yml    # CI
+├── .github/                    # CI, template de PR, Dependabot
+├── CONTRIBUTING.md             # convenções do projeto
 └── .env.example                # todas as variáveis de ambiente
 ```
 
@@ -147,27 +150,52 @@ Para deploy manual, rode `npm run deploy:aapanel` no servidor.
 
 ## Scripts
 
-| Onde | Comando | O que faz |
-|---|---|---|
-| raiz | `npm run dev` | Backend (nodemon) + frontend (Vite) |
-| raiz | `npm run install:all` | Instala dependências da raiz, backend e frontend |
-| raiz | `npm test` | Testes do webhook + backend |
-| raiz | `npm run deploy:aapanel` | Deploy no servidor |
-| raiz | `npm run pm2:start` / `pm2:restart` / `pm2:logs` | Backend no PM2 |
-| raiz | `npm run webhook:start` / `webhook:logs` | Webhook no PM2 |
-| backend | `npm run migrate` / `migrate:down` | Aplica migrations pendentes / reverte a última |
-| backend | `npm run create-admin` | Cria ou promove admin (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) |
-| frontend | `npm run build` | Build de produção em `frontend/dist` |
+| Onde     | Comando                                          | O que faz                                               |
+| -------- | ------------------------------------------------ | ------------------------------------------------------- |
+| raiz     | `npm run dev`                                    | Backend (nodemon) + frontend (Vite)                     |
+| raiz     | `npm run install:all`                            | Instala dependências da raiz, backend e frontend        |
+| raiz     | `npm test`                                       | Testes do webhook + backend                             |
+| raiz     | `npm run lint`                                   | ESLint em backend, webhook e frontend                   |
+| raiz     | `npm run format` / `format:check`                | Formata / verifica a formatação (Prettier)              |
+| raiz     | `npm run deploy:aapanel`                         | Deploy no servidor                                      |
+| raiz     | `npm run pm2:start` / `pm2:restart` / `pm2:logs` | Backend no PM2                                          |
+| raiz     | `npm run webhook:start` / `webhook:logs`         | Webhook no PM2                                          |
+| backend  | `npm run migrate` / `migrate:down`               | Aplica migrations pendentes / reverte a última          |
+| backend  | `npm run create-admin`                           | Cria ou promove admin (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) |
+| frontend | `npm run build`                                  | Build de produção em `frontend/dist`                    |
+
+---
+
+## API
+
+Todas as rotas ficam sob `/api` e respondem JSON no formato `{ success, message?, ... }`. Erros usam o status HTTP adequado (400 validação, 401 sem sessão, 403 sem permissão, 404, 409 conflito, 429 rate limit).
+
+| Método e rota                             | Acesso  | O que faz                                                 |
+| ----------------------------------------- | ------- | --------------------------------------------------------- |
+| `POST /api/auth/signup`                   | público | Cria conta com perfil `user` e abre sessão                |
+| `POST /api/auth/login`                    | público | Abre sessão                                               |
+| `POST /api/auth/logout`                   | público | Encerra a sessão                                          |
+| `GET /api/me`                             | logado  | Dados da própria conta                                    |
+| `PATCH /api/me`                           | logado  | Altera nome e e-mail                                      |
+| `PUT /api/me/password`                    | logado  | Troca a senha (exige a atual) e encerra as outras sessões |
+| `GET /api/users?limit&offset`             | admin   | Lista paginada (padrão 50, máximo 100)                    |
+| `POST /api/users`                         | admin   | Cria usuário com perfil `user` ou `admin`                 |
+| `GET /api/users/:id`                      | admin   | Detalhes de um usuário                                    |
+| `PUT /api/users/:id`                      | admin   | Altera nome, e-mail, senha e perfil                       |
+| `DELETE /api/users/:id`                   | admin   | Exclui usuário                                            |
+| `GET /api/health`, `/api/health/detailed` | público | Saúde do app e do banco                                   |
+
+Login, cadastro e troca de senha têm rate limit compartilhado (10 tentativas a cada 15 minutos por IP).
 
 ---
 
 ## Como funciona
 
-- **Rotas**: o backend monta tudo sob `/api`, e nginx e Vite encaminham `/api/*` para ele.
+- **Camadas**: rotas traduzem HTTP e cuidam da sessão; `services/` concentra as regras de negócio e lança erros tipados (`lib/errors.js`), que o error handler converte no status HTTP. nginx e Vite encaminham `/api/*` para o backend.
 - **Banco**: PostgreSQL + Sequelize, com schema versionado em `backend/db/migrations`. O backend não altera o schema ao iniciar; isso é feito por `npm run migrate`.
 - **Autenticação por sessão**: cookie `httpOnly`, `Secure` em produção, com as sessões guardadas no Postgres (`connect-pg-simple`). O ID da sessão é regenerado no login. Se o acesso não passar por HTTPS, defina `COOKIE_SECURE=false`.
 - **Perfis**: `user` ou `admin`. O cadastro público sempre cria `user`. O primeiro admin vem do `create-admin`; depois disso, admins criam usuários e alteram perfis pelo painel. O admin não altera o próprio perfil nem exclui a própria conta, e o sistema nunca fica sem administrador.
-- **Conta do usuário**: na home, o usuário vê o próprio perfil, edita nome e e-mail (`PATCH /api/user/profile`) e troca a senha informando a atual (`PUT /api/user/password`).
+- **Conta do usuário**: na home, o usuário vê o próprio perfil, edita nome e e-mail e troca a senha informando a atual.
 - **Acesso sempre atual**: o usuário da sessão é relido do banco a cada requisição. Rebaixar ou excluir alguém tira o acesso na hora.
 - **Troca de senha encerra as outras sessões**, seja pelo próprio usuário ou pelo admin: sessões abertas antes da troca (`users.passwordChangedAt`) deixam de valer, e só a sessão de quem trocou continua ativa.
 - **E-mails** são guardados em minúsculas, sem espaços nas pontas. A migration `004-normalize-emails` aborta, sem alterar nada, se houver contas que só diferem na caixa; exclua ou altere as extras e rode `npm run migrate` de novo.

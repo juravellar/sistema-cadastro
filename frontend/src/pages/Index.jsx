@@ -134,9 +134,7 @@ function Index() {
         <ul className="nav nav-tabs" id="authTabs" role="tablist">
           <li className="nav-item flex-fill" role="presentation">
             <button
-              className={`nav-link w-100 ${
-                activeTab === "login" ? "active" : ""
-              }`}
+              className={`nav-link w-100 ${activeTab === "login" ? "active" : ""}`}
               onClick={() => {
                 setActiveTab("login");
                 clearErrors();
@@ -148,9 +146,7 @@ function Index() {
           </li>
           <li className="nav-item flex-fill" role="presentation">
             <button
-              className={`nav-link w-100 ${
-                activeTab === "signup" ? "active" : ""
-              }`}
+              className={`nav-link w-100 ${activeTab === "signup" ? "active" : ""}`}
               onClick={() => {
                 setActiveTab("signup");
                 clearErrors();
@@ -182,9 +178,7 @@ function Index() {
                     </label>
                     <input
                       type="email"
-                      className={`form-control ${
-                        loginErrors.email ? "is-invalid" : ""
-                      }`}
+                      className={`form-control ${loginErrors.email ? "is-invalid" : ""}`}
                       id="login-email"
                       placeholder="Digite seu email"
                       value={loginEmail}
@@ -193,9 +187,7 @@ function Index() {
                       disabled={isLoading}
                     />
                     {loginErrors.email && (
-                      <div className="invalid-feedback">
-                        {loginErrors.email}
-                      </div>
+                      <div className="invalid-feedback">{loginErrors.email}</div>
                     )}
                   </div>
 
@@ -205,9 +197,7 @@ function Index() {
                     </label>
                     <input
                       type="password"
-                      className={`form-control ${
-                        loginErrors.password ? "is-invalid" : ""
-                      }`}
+                      className={`form-control ${loginErrors.password ? "is-invalid" : ""}`}
                       id="login-password"
                       placeholder="Digite sua senha"
                       value={loginPassword}
@@ -216,17 +206,11 @@ function Index() {
                       disabled={isLoading}
                     />
                     {loginErrors.password && (
-                      <div className="invalid-feedback">
-                        {loginErrors.password}
-                      </div>
+                      <div className="invalid-feedback">{loginErrors.password}</div>
                     )}
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn btn-primary w-100 mb-2"
-                    disabled={isLoading}
-                  >
+                  <button type="submit" className="btn btn-primary w-100 mb-2" disabled={isLoading}>
                     {isLoading ? "Entrando..." : "Entrar"}
                   </button>
                 </form>
@@ -253,9 +237,7 @@ function Index() {
                     </label>
                     <input
                       type="text"
-                      className={`form-control ${
-                        signupErrors.username ? "is-invalid" : ""
-                      }`}
+                      className={`form-control ${signupErrors.username ? "is-invalid" : ""}`}
                       id="signup-username"
                       placeholder="Digite seu nome de usuário"
                       value={signupUsername}
@@ -264,9 +246,7 @@ function Index() {
                       disabled={isLoading}
                     />
                     {signupErrors.username && (
-                      <div className="invalid-feedback">
-                        {signupErrors.username}
-                      </div>
+                      <div className="invalid-feedback">{signupErrors.username}</div>
                     )}
                   </div>
 
@@ -276,9 +256,7 @@ function Index() {
                     </label>
                     <input
                       type="email"
-                      className={`form-control ${
-                        signupErrors.email ? "is-invalid" : ""
-                      }`}
+                      className={`form-control ${signupErrors.email ? "is-invalid" : ""}`}
                       id="signup-email"
                       placeholder="Digite seu email"
                       value={signupEmail}
@@ -287,9 +265,7 @@ function Index() {
                       disabled={isLoading}
                     />
                     {signupErrors.email && (
-                      <div className="invalid-feedback">
-                        {signupErrors.email}
-                      </div>
+                      <div className="invalid-feedback">{signupErrors.email}</div>
                     )}
                   </div>
 
@@ -299,9 +275,7 @@ function Index() {
                     </label>
                     <input
                       type="password"
-                      className={`form-control ${
-                        signupErrors.password ? "is-invalid" : ""
-                      }`}
+                      className={`form-control ${signupErrors.password ? "is-invalid" : ""}`}
                       id="signup-password"
                       placeholder="Digite sua senha"
                       value={signupPassword}
@@ -311,9 +285,7 @@ function Index() {
                       disabled={isLoading}
                     />
                     {signupErrors.password && (
-                      <div className="invalid-feedback">
-                        {signupErrors.password}
-                      </div>
+                      <div className="invalid-feedback">{signupErrors.password}</div>
                     )}
                   </div>
 
@@ -323,9 +295,7 @@ function Index() {
                     </label>
                     <input
                       type="password"
-                      className={`form-control ${
-                        signupErrors.confirmPassword ? "is-invalid" : ""
-                      }`}
+                      className={`form-control ${signupErrors.confirmPassword ? "is-invalid" : ""}`}
                       id="signup-confirm"
                       placeholder="Confirme sua senha"
                       value={signupConfirmPassword}
@@ -334,17 +304,11 @@ function Index() {
                       disabled={isLoading}
                     />
                     {signupErrors.confirmPassword && (
-                      <div className="invalid-feedback">
-                        {signupErrors.confirmPassword}
-                      </div>
+                      <div className="invalid-feedback">{signupErrors.confirmPassword}</div>
                     )}
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn btn-primary w-100"
-                    disabled={isLoading}
-                  >
+                  <button type="submit" className="btn btn-primary w-100" disabled={isLoading}>
                     {isLoading ? "Criando conta..." : "Criar conta"}
                   </button>
                 </form>

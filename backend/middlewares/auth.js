@@ -1,14 +1,6 @@
 const { User } = require("../models");
-
-function unauthorized(res) {
-  return res.status(401).json({ success: false, message: "Usuário não autenticado" });
-}
-
-function destroySession(req) {
-  return new Promise((resolve, reject) => {
-    req.session.destroy((err) => (err ? reject(err) : resolve()));
-  });
-}
+const { AuthenticationError, ForbiddenError } = require("../lib/errors");
+const { destroySession } = require("../lib/session");
 
 // O usuário é relido do banco a cada requisição: sem isso, quem foi excluído
 // ou perdeu o perfil de admin manteria o acesso até a sessão expirar.
@@ -33,24 +25,16 @@ function openedBeforePasswordChange(session, user) {
   return !session.authAt || user.passwordChangedAt.getTime() > session.authAt;
 }
 
-function requireAuth(req, res, next) {
-  loadCurrentUser(req)
-    .then((user) => (user ? next() : unauthorized(res)))
-    .catch(next);
+async function requireAuth(req, res, next) {
+  if (!(await loadCurrentUser(req))) throw new AuthenticationError();
+  next();
 }
 
-function requireAdmin(req, res, next) {
-  loadCurrentUser(req)
-    .then((user) => {
-      if (!user) return unauthorized(res);
-      if (user.role !== User.ROLES.ADMIN) {
-        return res
-          .status(403)
-          .json({ success: false, message: "Apenas administradores podem acessar este recurso" });
-      }
-      next();
-    })
-    .catch(next);
+async function requireAdmin(req, res, next) {
+  const user = await loadCurrentUser(req);
+  if (!user) throw new AuthenticationError();
+  if (user.role !== User.ROLES.ADMIN) throw new ForbiddenError();
+  next();
 }
 
 module.exports = { requireAuth, requireAdmin };

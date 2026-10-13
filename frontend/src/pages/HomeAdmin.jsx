@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { apiRequest } from "../lib/api";
+import { api } from "../lib/api";
 import UserFormModal from "../components/UserFormModal";
 
 const PAGE_SIZE = 20;
@@ -18,10 +18,7 @@ function HomeAdmin() {
 
   const loadUsers = useCallback(async (nextOffset) => {
     try {
-      const { ok, data } = await apiRequest(
-        "GET",
-        `/api/users?limit=${PAGE_SIZE}&offset=${nextOffset}`
-      );
+      const { ok, data } = await api.users.list({ limit: PAGE_SIZE, offset: nextOffset });
       if (!ok) throw new Error(data.message || "Erro ao buscar usuários");
       setUsers(data.users);
       setTotal(data.total);
@@ -42,11 +39,9 @@ function HomeAdmin() {
 
   const saveUser = async (values) => {
     const isEdit = modal.type === "edit";
-    const { ok, data } = await apiRequest(
-      isEdit ? "PUT" : "POST",
-      isEdit ? `/api/user/id/${modal.user.id}` : "/api/users",
-      values
-    );
+    const { ok, data } = isEdit
+      ? await api.users.update(modal.user.id, values)
+      : await api.users.create(values);
     if (!ok) return data.message || "Erro ao salvar usuário";
 
     closeModal();
@@ -55,7 +50,7 @@ function HomeAdmin() {
   };
 
   const deleteUser = async () => {
-    const { ok, data } = await apiRequest("DELETE", `/api/user/id/${modal.user.id}`);
+    const { ok, data } = await api.users.remove(modal.user.id);
     closeModal();
     if (!ok) {
       setError(data.message || "Erro ao excluir usuário");
@@ -91,7 +86,11 @@ function HomeAdmin() {
 
         <div className="d-flex justify-content-between align-items-center mb-3 mt-4">
           <h2 className="mb-0">Usuários</h2>
-          <button type="button" className="btn btn-success" onClick={() => setModal({ type: "create" })}>
+          <button
+            type="button"
+            className="btn btn-success"
+            onClick={() => setModal({ type: "create" })}
+          >
             Novo Usuário
           </button>
         </div>
@@ -144,7 +143,10 @@ function HomeAdmin() {
         </table>
 
         {total > PAGE_SIZE && (
-          <nav className="d-flex justify-content-between align-items-center mb-3" aria-label="Paginação">
+          <nav
+            className="d-flex justify-content-between align-items-center mb-3"
+            aria-label="Paginação"
+          >
             <button
               type="button"
               className="btn btn-outline-secondary"
@@ -182,12 +184,21 @@ function HomeAdmin() {
       )}
 
       {modal?.type === "delete" && (
-        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Excluir Usuário</h5>
-                <button type="button" className="btn-close" aria-label="Fechar" onClick={closeModal} />
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Fechar"
+                  onClick={closeModal}
+                />
               </div>
               <div className="modal-body">
                 <p>

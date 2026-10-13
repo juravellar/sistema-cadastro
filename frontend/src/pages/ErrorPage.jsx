@@ -5,10 +5,7 @@ function ErrorPage() {
   const navigate = useNavigate();
 
   const searchParams = new URLSearchParams(location.search);
-  const message =
-    searchParams.get("message") ||
-    location.state?.message ||
-    "Página não encontrada";
+  const message = searchParams.get("message") || location.state?.message || "Página não encontrada";
   const status = searchParams.get("status") || location.state?.status || "404";
   const stack = location.state?.stack;
 
@@ -36,10 +33,7 @@ function ErrorPage() {
                 )}
 
                 <div className="mt-4">
-                  <button
-                    className="btn btn-primary mr-2"
-                    onClick={handleGoHome}
-                  >
+                  <button className="btn btn-primary mr-2" onClick={handleGoHome}>
                     Voltar ao Início
                   </button>
                 </div>
