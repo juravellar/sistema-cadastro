@@ -11,10 +11,18 @@ function startSession(req, user) {
   });
 }
 
+const SESSION_COOKIE = "connect.sid";
+
 function destroySession(req) {
   return new Promise((resolve, reject) => {
     req.session.destroy((err) => (err ? reject(err) : resolve()));
   });
 }
 
-module.exports = { startSession, destroySession };
+async function logout(req, res) {
+  await destroySession(req);
+  res.clearCookie(SESSION_COOKIE, { path: "/" });
+  res.json({ success: true, message: "Logout realizado" });
+}
+
+module.exports = { SESSION_COOKIE, startSession, destroySession, logout };

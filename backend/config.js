@@ -1,7 +1,10 @@
 require("dotenv").config({ quiet: true });
 
-const env = process.env.NODE_ENV || "development";
-const isProduction = process.env.NODE_ENV === "production";
+const isDevelopment = process.env.NODE_ENV === "development";
+const isTest = process.env.NODE_ENV === "test";
+// Tudo que não é development/test explícito é tratado como produção, inclusive
+// um servidor sem NODE_ENV: segredo obrigatório, cookie Secure, sem stack trace.
+const isProduction = !isDevelopment && !isTest;
 
 const TRUE_VALUES = new Set(["true", "1", "yes"]);
 const FALSE_VALUES = new Set(["false", "0", "no"]);
@@ -26,12 +29,9 @@ function parsePort(name, value, fallback) {
 // Lido na importação: o Sequelize é criado quando models/ é carregado, e
 // migrate, create-admin e o servidor precisam do banco.
 const config = Object.freeze({
-  env,
   isProduction,
-  // Só com NODE_ENV=development explícito: o error handler devolve o stack
-  // trace nesse modo, e um servidor sem NODE_ENV não pode vazá-lo.
-  isDevelopment: process.env.NODE_ENV === "development",
-  isTest: process.env.NODE_ENV === "test",
+  isDevelopment,
+  isTest,
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
   db: Object.freeze({
     host: process.env.PGHOST || "postgres",
@@ -47,7 +47,9 @@ const config = Object.freeze({
 function serverConfig() {
   const sessionSecret = process.env.SESSION_SECRET;
   if (!sessionSecret && isProduction) {
-    throw new Error("SESSION_SECRET é obrigatório em produção");
+    throw new Error(
+      "SESSION_SECRET é obrigatório fora de NODE_ENV=development/test (inclusive sem NODE_ENV)"
+    );
   }
   return {
     port: parsePort("PORT", process.env.PORT, 3002),

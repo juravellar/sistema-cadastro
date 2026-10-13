@@ -4,27 +4,24 @@ const session = require("express-session");
 const cors = require("cors");
 const createApiRouter = require("./routes");
 const { config, serverConfig } = require("./config");
+const { SESSION_COOKIE } = require("./lib/session");
 
 function createPgSessionStore() {
   const PgSession = require("connect-pg-simple")(session);
   return new PgSession({ conObject: config.db, tableName: "session" });
 }
 
-// Erros que escapam da validação dos serviços: a regex de e-mail aceitar algo
-// que o validator do model recusa, ou dois cadastros simultâneos passarem pela
-// checagem de duplicidade e só o índice único barrar o segundo.
+// Dois cadastros simultâneos com o mesmo e-mail passam pela checagem de
+// duplicidade do serviço, e só o índice único barra o segundo. Os demais erros
+// do banco continuam 500 e são logados: indicam bug, não erro do cliente.
 function statusFromDatabaseError(err) {
   if (err.name === "SequelizeUniqueConstraintError") {
     return { status: 409, message: "Já existe um cadastro com esses dados." };
   }
-  if (err.name === "SequelizeValidationError") {
-    return { status: 400, message: "Dados inválidos." };
-  }
   return null;
 }
 
-function createApp({ sessionStore, authRateLimit } = {}) {
-  const server = serverConfig();
+function createApp({ sessionStore, authRateLimit, server = serverConfig() } = {}) {
   const app = express();
 
   // Atrás de nginx: necessário para req.ip correto (rate limit) e cookie secure.
@@ -51,7 +48,7 @@ function createApp({ sessionStore, authRateLimit } = {}) {
       secret: server.sessionSecret,
       resave: false,
       saveUninitialized: false,
-      name: "connect.sid",
+      name: SESSION_COOKIE,
       cookie: {
         secure: server.secureCookie,
         httpOnly: true,

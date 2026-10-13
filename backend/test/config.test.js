@@ -1,15 +1,22 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
 const { execFileSync } = require("child_process");
+const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
-// config.js lê o ambiente na importação; cada cenário roda num processo novo.
+const CONFIG_PATH = path.join(__dirname, "..", "config.js");
+// Diretório vazio como cwd: o dotenv procura .env no cwd, e o backend/.env
+// local de quem roda os testes não pode interferir nos cenários.
+const EMPTY_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "config-test-"));
+
 function loadConfig(env, expression) {
-  const script = `const c = require("./config"); console.log(JSON.stringify(${expression}));`;
+  const script = `const c = require(${JSON.stringify(CONFIG_PATH)}); console.log(JSON.stringify(${expression}));`;
   const output = execFileSync(process.execPath, ["-e", script], {
-    cwd: path.join(__dirname, ".."),
-    env: { PATH: process.env.PATH, DOTENV_CONFIG_QUIET: "true", ...env },
+    cwd: EMPTY_DIR,
+    env: { PATH: process.env.PATH, ...env },
     encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
   });
   return JSON.parse(output.trim().split("\n").pop());
 }
@@ -23,6 +30,23 @@ describe("config", () => {
     assert.equal(loadConfig({ NODE_ENV: "development" }, "c.config.isDevelopment"), true);
   });
 
+  it("sem NODE_ENV, o servidor exige SESSION_SECRET", () => {
+    assert.throws(() => loadConfig({}, "c.serverConfig()"), /SESSION_SECRET/);
+  });
+
+  it("sem NODE_ENV, o cookie é Secure por padrão", () => {
+    const server = loadConfig({ SESSION_SECRET: "s" }, "c.serverConfig()");
+    assert.equal(server.secureCookie, true);
+  });
+
+  for (const nodeEnv of ["development", "test"]) {
+    it(`NODE_ENV=${nodeEnv} usa o segredo local e cookie sem Secure`, () => {
+      const server = loadConfig({ NODE_ENV: nodeEnv }, "c.serverConfig()");
+      assert.equal(server.sessionSecret, "dev-only-session-secret");
+      assert.equal(server.secureCookie, false);
+    });
+  }
+
   for (const [value, expected] of [
     ["0", false],
     ["FALSE", false],
@@ -32,7 +56,10 @@ describe("config", () => {
     ["yes", true],
   ]) {
     it(`COOKIE_SECURE=${value} vira ${expected}`, () => {
-      const server = loadConfig({ COOKIE_SECURE: value }, "c.serverConfig()");
+      const server = loadConfig(
+        { NODE_ENV: "development", COOKIE_SECURE: value },
+        "c.serverConfig()"
+      );
       assert.equal(server.secureCookie, expected);
     });
   }
@@ -46,10 +73,29 @@ describe("config", () => {
   });
 
   it("valores inválidos do servidor falham ao subir o servidor", () => {
+    const base = { NODE_ENV: "development" };
     assert.throws(
-      () => loadConfig({ COOKIE_SECURE: "talvez" }, "c.serverConfig()"),
+      () => loadConfig({ ...base, COOKIE_SECURE: "talvez" }, "c.serverConfig()"),
       /COOKIE_SECURE/
     );
-    assert.throws(() => loadConfig({ PORT: "abc" }, "c.serverConfig()"), /PORT/);
+    assert.throws(() => loadConfig({ ...base, PORT: "abc" }, "c.serverConfig()"), /PORT/);
+  });
+
+  // O isolamento depende de o dotenv ler o .env do cwd: este teste prova isso
+  // com um .env num diretório temporário, sem nunca tocar no backend/.env.
+  it("lê o .env do diretório atual (base do isolamento dos outros cenários)", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "config-env-"));
+    fs.writeFileSync(path.join(dir, ".env"), "NODE_ENV=development\n");
+    const script = `console.log(JSON.stringify(require(${JSON.stringify(CONFIG_PATH)}).config.isDevelopment))`;
+    const output = execFileSync(process.execPath, ["-e", script], {
+      cwd: dir,
+      env: { PATH: process.env.PATH },
+      encoding: "utf8",
+    });
+    assert.equal(JSON.parse(output.trim().split("\n").pop()), true);
+  });
+
+  it("sem NODE_ENV, todo o app se comporta como produção", () => {
+    assert.equal(loadConfig({}, "c.config.isProduction"), true);
   });
 });

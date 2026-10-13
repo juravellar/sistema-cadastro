@@ -1,48 +1,45 @@
 #!/usr/bin/env node
 
-require("../config");
 const { sequelize, User } = require("../models");
-const { hashPassword } = require("../services/user-service");
-const { validatePassword, validateEmail, normalizeEmail } = require("../lib/validation");
+const userService = require("../services/user-service");
+const { normalizeEmail, validatePassword } = require("../lib/validation");
+
+async function promote(user, password) {
+  user.role = User.ROLES.ADMIN;
+  if (password) {
+    const passwordError = validatePassword(password);
+    if (passwordError) throw new Error(passwordError);
+    user.password = await userService.hashPassword(password);
+  }
+  await user.save();
+}
 
 async function createAdmin() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_USERNAME = "admin" } = process.env;
-
   if (!ADMIN_EMAIL) {
     throw new Error("Defina ADMIN_EMAIL (e ADMIN_PASSWORD para criar um novo usuário).");
   }
-  const emailError = validateEmail(ADMIN_EMAIL);
-  if (emailError) throw new Error(`ADMIN_EMAIL: ${emailError}`);
+  const email = normalizeEmail(ADMIN_EMAIL);
 
-  const existing = await User.findOne({ where: { email: normalizeEmail(ADMIN_EMAIL) } });
-
+  const existing = await User.findOne({ where: { email } });
   if (existing) {
-    existing.role = User.ROLES.ADMIN;
-    if (ADMIN_PASSWORD) {
-      const passwordError = validatePassword(ADMIN_PASSWORD);
-      if (passwordError) throw new Error(`ADMIN_PASSWORD: ${passwordError}`);
-      existing.password = await hashPassword(ADMIN_PASSWORD);
-    }
-    await existing.save();
-    console.log(`✅ Usuário ${ADMIN_EMAIL} promovido a admin`);
+    await promote(existing, ADMIN_PASSWORD);
+    console.log(`✅ Usuário ${email} promovido a admin`);
     return;
   }
 
-  const passwordError = validatePassword(ADMIN_PASSWORD);
-  if (passwordError) throw new Error(`ADMIN_PASSWORD: ${passwordError}`);
-
-  await User.create({
+  await userService.createUser({
     username: ADMIN_USERNAME,
-    email: ADMIN_EMAIL,
-    password: await hashPassword(ADMIN_PASSWORD),
+    email,
+    password: ADMIN_PASSWORD,
     role: User.ROLES.ADMIN,
   });
-  console.log(`✅ Admin ${ADMIN_EMAIL} criado`);
+  console.log(`✅ Admin ${email} criado`);
 }
 
 createAdmin()
   .catch((err) => {
-    console.error("❌", err.message);
+    console.error("❌ create-admin:", err.message);
     process.exitCode = 1;
   })
   .finally(() => sequelize.close());
