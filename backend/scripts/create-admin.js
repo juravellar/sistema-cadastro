@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 require("../config");
-const bcrypt = require("bcrypt");
 const { sequelize, User } = require("../models");
+const { hashPassword } = require("../services/user-service");
 const { validatePassword, validateEmail, normalizeEmail } = require("../lib/validation");
 
 async function createAdmin() {
@@ -21,7 +21,7 @@ async function createAdmin() {
     if (ADMIN_PASSWORD) {
       const passwordError = validatePassword(ADMIN_PASSWORD);
       if (passwordError) throw new Error(`ADMIN_PASSWORD: ${passwordError}`);
-      existing.password = await bcrypt.hash(ADMIN_PASSWORD, 10);
+      existing.password = await hashPassword(ADMIN_PASSWORD);
     }
     await existing.save();
     console.log(`✅ Usuário ${ADMIN_EMAIL} promovido a admin`);
@@ -34,7 +34,7 @@ async function createAdmin() {
   await User.create({
     username: ADMIN_USERNAME,
     email: ADMIN_EMAIL,
-    password: await bcrypt.hash(ADMIN_PASSWORD, 10),
+    password: await hashPassword(ADMIN_PASSWORD),
     role: User.ROLES.ADMIN,
   });
   console.log(`✅ Admin ${ADMIN_EMAIL} criado`);
