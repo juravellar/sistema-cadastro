@@ -2,8 +2,9 @@
 
 const http = require("http");
 const createApp = require("../app");
+const { config } = require("../config");
 
-const port = Number(process.env.PORT) || 3002;
+const { port } = config;
 const app = createApp();
 app.set("port", port);
 

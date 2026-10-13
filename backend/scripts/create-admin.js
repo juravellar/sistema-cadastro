@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require("dotenv").config();
+require("../config");
 const bcrypt = require("bcrypt");
 const { sequelize, User } = require("../models");
 const { validatePassword, validateEmail, normalizeEmail } = require("../lib/validation");
