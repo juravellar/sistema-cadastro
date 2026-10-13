@@ -9,6 +9,7 @@ const {
   loginAgent,
   closeDatabase,
 } = require("./helpers");
+const { User } = require("../models");
 
 describe("users (admin)", () => {
   let app;
@@ -162,6 +163,42 @@ describe("users (admin)", () => {
       const target = await createUser({ email: "alvo@example.com" });
       const res = await adminAgent.put(`/api/user/id/${target.id}`).send({ password: "curta" });
       assert.equal(res.status, 400);
+    });
+  });
+
+  describe("concorrência", () => {
+    async function twoAdmins() {
+      const other = await createUser({ email: "admin2@example.com", role: "admin", username: "admin2" });
+      const otherAgent = await loginAgent(app, "admin2@example.com");
+      return { other, otherAgent };
+    }
+
+    async function adminCount() {
+      return User.count({ where: { role: "admin" } });
+    }
+
+    it("dois admins se rebaixando ao mesmo tempo não zeram os admins", async () => {
+      const { other, otherAgent } = await twoAdmins();
+
+      const results = await Promise.all([
+        adminAgent.put(`/api/user/id/${other.id}`).send({ role: "user" }),
+        otherAgent.put(`/api/user/id/${admin.id}`).send({ role: "user" }),
+      ]);
+
+      assert.equal(await adminCount(), 1);
+      assert.deepEqual(results.map((r) => r.status).sort(), [200, 400]);
+    });
+
+    it("dois admins se excluindo ao mesmo tempo não zeram os admins", async () => {
+      const { other, otherAgent } = await twoAdmins();
+
+      const results = await Promise.all([
+        adminAgent.delete(`/api/user/id/${other.id}`),
+        otherAgent.delete(`/api/user/id/${admin.id}`),
+      ]);
+
+      assert.equal(await adminCount(), 1);
+      assert.deepEqual(results.map((r) => r.status).sort(), [200, 400]);
     });
   });
 
