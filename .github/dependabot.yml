@@ -1,4 +1,6 @@
 version: 2
+# Um PR por pasta por semana, com todas as atualizações juntas (inclusive
+# versões maiores), em vez de um PR por biblioteca.
 updates:
   - package-ecosystem: npm
     directory: /
@@ -7,7 +9,6 @@ updates:
     groups:
       dependencias:
         patterns: ["*"]
-        update-types: [minor, patch]
   - package-ecosystem: npm
     directory: /backend
     schedule:
@@ -15,7 +16,6 @@ updates:
     groups:
       dependencias:
         patterns: ["*"]
-        update-types: [minor, patch]
   - package-ecosystem: npm
     directory: /frontend
     schedule:
@@ -23,8 +23,17 @@ updates:
     groups:
       dependencias:
         patterns: ["*"]
-        update-types: [minor, patch]
+    # Exigem Node 22; o projeto roda em Node 20 (.nvmrc, Dockerfiles, CI e
+    # servidor). Remover ao atualizar o Node.
+    ignore:
+      - dependency-name: vitest
+        versions: [">=5"]
+      - dependency-name: jsdom
+        versions: [">=30"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
