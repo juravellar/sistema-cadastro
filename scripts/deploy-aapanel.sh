@@ -23,7 +23,7 @@ echo "🔄 Reiniciando backend com PM2..."
 if pm2 describe sistema-cadastro-backend >/dev/null 2>&1; then
   pm2 restart sistema-cadastro-backend --update-env
 else
-  pm2 start backend/ecosystem.config.js --env production
+  (cd backend && pm2 start ecosystem.config.js --env production)
 fi
 pm2 save
 
