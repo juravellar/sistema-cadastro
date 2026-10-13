@@ -22,11 +22,13 @@
     "webhook:restart": "pm2 restart webhook-server",
     "webhook:logs": "pm2 logs webhook-server",
     "clean": "rimraf backend/node_modules frontend/node_modules backend/dist frontend/dist",
-    "test": "cd backend && npm test"
+    "test": "npm run test:webhook && npm test --prefix backend",
+    "test:webhook": "node --test \"test/**/*.test.js\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "rimraf": "^5.0.5"
+    "rimraf": "^5.0.5",
+    "supertest": "^7.3.1"
   },
   "engines": {
     "node": ">=18.0.0",
