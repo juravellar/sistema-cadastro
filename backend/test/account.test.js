@@ -46,6 +46,12 @@ describe("conta do próprio usuário", () => {
       assert.equal((await agent.get("/api/user/profile")).body.user.username, "Maria Silva");
     });
 
+    it("aceita e-mail com espaços nas pontas", async () => {
+      const res = await agent.patch("/api/user/profile").send({ email: "  Maria2@Example.com " });
+      assert.equal(res.status, 200);
+      assert.equal(res.body.user.email, "maria2@example.com");
+    });
+
     it("não permite mudar o próprio perfil por aqui", async () => {
       const res = await agent.patch("/api/user/profile").send({ role: "admin" });
       assert.equal(res.status, 200);

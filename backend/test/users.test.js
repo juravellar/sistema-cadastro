@@ -132,6 +132,22 @@ describe("users (admin)", () => {
       assert.equal(res.status, 400);
     });
 
+    it("recusa troca da própria senha pelo painel e mantém a sessão", async () => {
+      const res = await adminAgent
+        .put(`/api/user/id/${admin.id}`)
+        .send({ password: "outra-senha-forte-1" });
+
+      assert.equal(res.status, 400);
+      assert.match(res.body.message, /Minha conta/);
+      assert.equal((await adminAgent.get("/api/users")).status, 200);
+    });
+
+    it("ainda permite ao admin editar o próprio nome", async () => {
+      const res = await adminAgent.put(`/api/user/id/${admin.id}`).send({ username: "Chefe" });
+      assert.equal(res.status, 200);
+      assert.equal((await adminAgent.get("/api/user/profile")).body.user.username, "Chefe");
+    });
+
     it("rejeita perfil inválido", async () => {
       const target = await createUser({ email: "alvo@example.com" });
       const res = await adminAgent.put(`/api/user/id/${target.id}`).send({ role: "root" });

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Avatar from "../components/account/Avatar";
 import ProfileCard from "../components/account/ProfileCard";
@@ -15,7 +16,7 @@ function firstName(name = "") {
 }
 
 function Home() {
-  const { user, logout, updateUser } = useAuth();
+  const { user, isAdmin, logout, updateUser } = useAuth();
 
   return (
     <div className="home-page">
@@ -27,6 +28,11 @@ function Home() {
               <Avatar name={user.username} size="sm" />
               {user.username}
             </span>
+            {isAdmin && (
+              <Link to="/home-admin" className="btn btn-outline-primary btn-sm">
+                Painel admin
+              </Link>
+            )}
             <button type="button" className="btn btn-outline-secondary btn-sm" onClick={logout}>
               Sair
             </button>

@@ -140,6 +140,11 @@ router.put("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, async (
     if (changesRole && user.id === req.session.user.id) {
       return badRequest(res, "Você não pode alterar o seu próprio perfil.");
     }
+    // A troca da própria senha exige a senha atual e regenera a sessão, o que
+    // só PUT /api/user/password faz. Aqui ela encerraria a sessão de quem pediu.
+    if (password && user.id === req.session.user.id) {
+      return badRequest(res, "Para trocar a sua senha, use a página Minha conta.");
+    }
     if (email !== undefined && (await emailTaken(email, user.id))) {
       return res
         .status(409)

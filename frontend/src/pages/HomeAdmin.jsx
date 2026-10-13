@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { apiRequest } from "../lib/api";
 import UserFormModal from "../components/UserFormModal";
@@ -81,9 +82,14 @@ function HomeAdmin() {
   return (
     <div className="content-container">
       <div className="container mt-4">
-        <h1>Bem-vindo, {currentUser?.username || currentUser?.email}!</h1>
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h1 className="mb-0">Bem-vindo, {currentUser?.username || currentUser?.email}!</h1>
+          <Link to="/home" className="btn btn-outline-secondary btn-sm">
+            Minha conta
+          </Link>
+        </div>
 
-        <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-3 mt-4">
           <h2 className="mb-0">Usuários</h2>
           <button type="button" className="btn btn-success" onClick={() => setModal({ type: "create" })}>
             Novo Usuário

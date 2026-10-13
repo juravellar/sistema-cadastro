@@ -131,4 +131,24 @@ describe("painel admin", () => {
 
     await waitFor(() => expect(window.location.pathname).toBe("/home"));
   });
+
+  it("editar a própria conta não oferece troca de senha e aponta para Minha conta", async () => {
+    renderAdminPanel();
+
+    await userEvent.click(within(await rowOf(ADMIN.email)).getByRole("button", { name: "Editar" }));
+
+    const form = screen.getByRole("form", { name: "Formulário de usuário" });
+    expect(within(form).queryByLabelText(/senha/i)).not.toBeInTheDocument();
+    expect(within(form).getByRole("link", { name: "Minha conta" })).toHaveAttribute("href", "/home");
+  });
+
+  it("leva à página Minha conta pelo cabeçalho", async () => {
+    renderAdminPanel();
+
+    await userEvent.click(await screen.findByRole("link", { name: "Minha conta" }));
+
+    expect(await screen.findByRole("region", { name: "Alterar senha" })).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/home");
+  });
 });
+

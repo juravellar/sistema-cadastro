@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App";
-import { mockApi, callsTo, USER } from "../test/mockApi";
+import { mockApi, callsTo, USER, ADMIN } from "../test/mockApi";
 
 function renderHome(routes = {}) {
   const fetchMock = mockApi({ sessionUser: USER, routes });
@@ -113,4 +113,21 @@ describe("home do usuário", () => {
 
     expect(await within(passwordSection()).findByRole("alert")).toHaveTextContent("Senha atual incorreta");
   });
+
+  it("mostra o link do painel só para admin", async () => {
+    renderHome();
+    await screen.findByRole("region", { name: "Seu perfil" });
+    expect(screen.queryByRole("link", { name: "Painel admin" })).not.toBeInTheDocument();
+  });
+
+  it("admin volta ao painel pelo cabeçalho", async () => {
+    mockApi({ sessionUser: ADMIN, routes: { "GET /api/users": () => [200, { success: true, users: [ADMIN], total: 1 }] } });
+    window.history.pushState({}, "", "/home");
+    render(<App />);
+
+    await userEvent.click(await screen.findByRole("link", { name: "Painel admin" }));
+
+    expect(await screen.findByRole("heading", { name: "Usuários" })).toBeInTheDocument();
+  });
 });
+
