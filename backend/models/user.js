@@ -34,10 +34,22 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: ROLES.USER,
       },
+      passwordChangedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       tableName: "users",
       timestamps: true,
+      hooks: {
+        // Sessões abertas antes desta data são encerradas (middlewares/auth.js).
+        beforeSave(user) {
+          if (!user.isNewRecord && user.changed("password")) {
+            user.passwordChangedAt = new Date();
+          }
+        },
+      },
     }
   );
 
@@ -49,6 +61,7 @@ module.exports = (sequelize) => {
       username: this.username,
       email: this.email,
       role: this.role,
+      createdAt: this.createdAt,
     };
   };
 

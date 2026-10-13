@@ -26,6 +26,7 @@ function startSession(req, user) {
     req.session.regenerate((err) => {
       if (err) return reject(err);
       req.session.user = user.toSessionUser();
+      req.session.authAt = Date.now();
       req.session.save((saveErr) => (saveErr ? reject(saveErr) : resolve()));
     });
   });
@@ -112,6 +113,58 @@ function createAuthRouter({ authRateLimit = 10 } = {}) {
 
   router.get("/user/profile", requireAuth, (req, res) => {
     res.json({ success: true, user: req.session.user });
+  });
+
+  router.patch("/user/profile", requireAuth, async (req, res, next) => {
+    const { username, email } = req.body;
+    const error = firstError(
+      username !== undefined && validateUsername(username),
+      email !== undefined && validateEmail(email)
+    );
+    if (error) return res.status(400).json({ success: false, message: error });
+
+    const user = req.currentUser;
+    try {
+      if (email !== undefined) {
+        const existing = await User.findOne({ where: { email: normalizeEmail(email) } });
+        if (existing && existing.id !== user.id) {
+          return res
+            .status(409)
+            .json({ success: false, message: "Email já cadastrado por outro usuário." });
+        }
+        user.email = email;
+      }
+      if (username !== undefined) user.username = username.trim();
+
+      await user.save();
+      req.session.user = user.toSessionUser();
+      res.json({ success: true, user: req.session.user });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.put("/user/password", authLimiter, requireAuth, async (req, res, next) => {
+    const { currentPassword, newPassword } = req.body;
+    if (typeof currentPassword !== "string" || !currentPassword) {
+      return res.status(400).json({ success: false, message: "Informe a senha atual" });
+    }
+    const error = validatePassword(newPassword);
+    if (error) return res.status(400).json({ success: false, message: error });
+
+    const user = req.currentUser;
+    try {
+      if (!(await bcrypt.compare(currentPassword, user.password))) {
+        return res.status(400).json({ success: false, message: "Senha atual incorreta" });
+      }
+
+      user.password = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+      await user.save();
+      await startSession(req, user);
+      res.json({ success: true, message: "Senha alterada. Outras sessões foram encerradas." });
+    } catch (err) {
+      next(err);
+    }
   });
 
   return router;
