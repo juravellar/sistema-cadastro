@@ -1,6 +1,6 @@
 # Sistema de Cadastro
 
-Cadastro e autenticação de usuários com **frontend em React (Vite)**, **backend em Node.js (Express)** e banco **PostgreSQL**. Usuários comuns se cadastram e entram no sistema; administradores gerenciam os usuários por um painel.
+Cadastro e autenticação de usuários com **frontend em React (Vite)**, **backend em Node.js (Express)** e banco **PostgreSQL**. Usuários comuns se cadastram e gerenciam a própria conta (dados e senha); administradores gerenciam os usuários por um painel.
 
 ---
 
@@ -167,13 +167,15 @@ Para deploy manual, rode `npm run deploy:aapanel` no servidor.
 - **Banco**: PostgreSQL + Sequelize, com schema versionado em `backend/db/migrations`. O backend não altera o schema ao iniciar; isso é feito por `npm run migrate`.
 - **Autenticação por sessão**: cookie `httpOnly`, `Secure` em produção, com as sessões guardadas no Postgres (`connect-pg-simple`). O ID da sessão é regenerado no login. Se o acesso não passar por HTTPS, defina `COOKIE_SECURE=false`.
 - **Perfis**: `user` ou `admin`. O cadastro público sempre cria `user`. O primeiro admin vem do `create-admin`; depois disso, admins criam usuários e alteram perfis pelo painel. O admin não altera o próprio perfil nem exclui a própria conta, e o sistema nunca fica sem administrador.
+- **Conta do usuário**: na home, o usuário vê o próprio perfil, edita nome e e-mail (`PATCH /api/user/profile`) e troca a senha informando a atual (`PUT /api/user/password`).
 - **Acesso sempre atual**: o usuário da sessão é relido do banco a cada requisição. Rebaixar ou excluir alguém tira o acesso na hora.
+- **Troca de senha encerra as outras sessões**, seja pelo próprio usuário ou pelo admin: sessões abertas antes da troca (`users.passwordChangedAt`) deixam de valer, e só a sessão de quem trocou continua ativa.
 - **E-mails** são guardados em minúsculas, sem espaços nas pontas. A migration `004-normalize-emails` aborta, sem alterar nada, se houver contas que só diferem na caixa; exclua ou altere as extras e rode `npm run migrate` de novo.
 
 ## Segurança
 
 - `SESSION_SECRET` obrigatório em produção, e `WEBHOOK_SECRET` obrigatório para o webhook iniciar
-- Rate limit em login e cadastro
+- Rate limit em login, cadastro e troca de senha
 - Mensagem de erro de login genérica, que não revela se o e-mail existe
 - Validação de entrada no backend (senha de 8 a 72 bytes)
 - Webhook valida a assinatura HMAC do GitHub sobre o corpo bruto da requisição
