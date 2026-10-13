@@ -1,86 +1,14 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 function Home() {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
-
-  const fetchUserInfo = async () => {
-    try {
-      const response = await fetch("/api/user/profile", {
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.user) {
-          setUser(data.user);
-        } else {
-          console.warn("Resposta OK mas sem usuário:", data);
-          navigate("/");
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.warn("Erro ao buscar perfil:", response.status, errorData);
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar informações do usuário:", error);
-      navigate("/");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      const response = await fetch("/api/logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        navigate("/");
-      } else {
-        alert("Erro ao fazer logout");
-      }
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      alert("Erro ao fazer logout");
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="content-container">
-        <div className="d-flex justify-content-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const { user, logout } = useAuth();
 
   return (
     <div className="content-container">
       <div className="container mt-4">
         <h1>Bem-vindo, {user?.username || user?.email}!</h1>
         <div className="d-flex gap-2">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleLogout}
-          >
+          <button type="button" className="btn btn-primary" onClick={logout}>
             Sair
           </button>
         </div>

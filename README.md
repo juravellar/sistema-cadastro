@@ -1,240 +1,185 @@
-
----
 # Sistema de Cadastro
 
-Um sistema completo com **frontend em React (Vite)** e **backend em Node.js (Express)** integrado a um banco **PostgreSQL**.  
-O projeto está totalmente preparado para **desenvolvimento**, **produção**, **Docker Dev**, **Docker Prod**, e **deploy em Vercel**.
+Cadastro e autenticação de usuários com **frontend em React (Vite)**, **backend em Node.js (Express)** e banco **PostgreSQL**. Usuários comuns se cadastram e entram no sistema; administradores gerenciam os usuários por um painel.
 
 ---
 
-# Estrutura do Projeto
+## Estrutura do projeto
 
 ```
-
 sistema-cadastro/
-├── backend/                 # API Node.js / Express
-│   ├── app.js
-│   ├── routes/
-│   ├── models/
-│   ├── middlewares/
-│   ├── bin/www
-│   └── package.json
-│
-├── frontend/                # Aplicação React (Vite)
-│   ├── src/
-│   ├── index.html
-│   └── package.json
-│
-├── docker/                  # Arquitetura Docker (dev + prod)
-│   ├── api/
-│   ├── frontend/
-│   └── nginx/
-│
-├── docker-compose.yml       # Compose de desenvolvimento
-├── docker-compose.prod.yml  # Compose de produção
-├── .env                     # Variáveis de ambiente
-└── README.md
-
-````
-
----
-
-# **Execução com Docker (Recomendado)**
-
-## Ambiente de Produção
-
-```bash
-docker compose -f docker-compose.prod.yml up --build -d
-````
-
-Acesse:
-
-* **Frontend** → [http://localhost](http://localhost)
-* **API (via Nginx)** → [http://localhost/api](http://localhost/api)
-* **Nginx Reverse Proxy** → porta 80
+├── backend/                    # API Express (todas as rotas sob /api)
+│   ├── app.js                  # createApp(): middlewares, sessão, rotas
+│   ├── bin/www                 # sobe o servidor HTTP (porta 3002)
+│   ├── routes/                 # auth.js, users.js, index.js
+│   ├── middlewares/auth.js     # requireAuth / requireAdmin
+│   ├── models/                 # Sequelize (User)
+│   ├── lib/validation.js       # validação de entrada
+│   ├── db/migrate.js           # executor de migrations (Umzug)
+│   ├── db/migrations/          # schema versionado
+│   ├── scripts/                # create-database.js, create-admin.js
+│   ├── test/                   # testes de integração (node:test + supertest)
+│   └── ecosystem.config.js     # PM2
+├── frontend/                   # SPA React (Vite + Bootstrap)
+│   └── src/                    # páginas, componentes, contexto de auth, testes
+├── webhook-server.js           # webhook do GitHub que dispara o deploy
+├── webhook-ecosystem.config.js # PM2 do webhook
+├── scripts/deploy-aapanel.sh   # deploy no servidor (pull, deps, migrations, build, restart)
+├── test/                       # testes do webhook
+├── nginx/                      # imagem nginx do compose de produção
+├── nginx-config/               # configs do nginx do servidor (deploy.chatflows.com.br)
+├── docker-compose.yml          # desenvolvimento
+├── docker-compose.prod.yml     # produção com Docker
+├── .github/workflows/ci.yml    # CI
+└── .env.example                # todas as variáveis de ambiente
+```
 
 ---
 
-## Ambiente de Desenvolvimento
+## Rodando com Docker (desenvolvimento)
 
 ```bash
 docker compose up --build
 ```
 
-Acesse:
-
-* **Frontend** → [http://localhost:5173](http://localhost:5173)
-* **API** → [http://localhost:3000](http://localhost:3000)
-
----
-
-# Arquitetura Docker Utilizada
-
-A estrutura Docker foi organizada para garantir:
-
-✔ Builds otimizados
-✔ Isolamento completo de frontend, backend e nginx
-✔ Reverse proxy seguro em produção
-✔ Hot reload no desenvolvimento
-✔ Nenhum secret exposto
-
-Para detalhes completos, consulte a pasta:
-`/docker/`
-
----
-
-# Execução Sem Docker
-
-## Backend (Express.js)
-
-1. Entre na pasta:
-
-   ```bash
-   cd backend
-   ```
-
-2. Instale dependências:
-
-   ```bash
-   npm install
-   ```
-
-3. Crie seu `.env`:
-
-   ```env
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=sistema_cadastro
-   DB_USER=seu_usuario
-   DB_PASSWORD=sua_senha
-   SESSION_SECRET=sua_chave_ultra_segura
-   ```
-
-4. Rode:
-
-   ```bash
-   npm run dev
-   ```
-
-API → [http://localhost:3002](http://localhost:3002)
-
----
-
-## Frontend (React + Vite)
-
-1. Entre na pasta:
-
-   ```bash
-   cd frontend
-   ```
-
-2. Instale:
-
-   ```bash
-   npm install
-   ```
-
-3. Rode:
-
-   ```bash
-   npm run dev
-   ```
-
-Frontend → [http://localhost:5173](http://localhost:5173)
-
----
-
-# Deploy no Vercel
-
-A Vercel fará deploy automático somente do **frontend**, então você tem duas opções:
-
-### ✔ **OPÇÃO 1 — Backend no Render / Railway / VPS**
-
-E o frontend na Vercel consumindo a API externa.
-
-Configure:
-
-```
-VITE_API_URL=https://url-da-api
-```
-
----
-
-### ✔ **OPÇÃO 2 — Mono-Repo com API funcionando em Serverless**
-
-Adicione no Vercel:
-
-```
-NODE_ENV=production
-DB_HOST=
-DB_PORT=
-DB_NAME=
-DB_USER=
-DB_PASSWORD=
-SESSION_SECRET=
-```
-
----
-
-# Scripts Disponíveis
+O backend aplica as migrations antes de iniciar. Quando aparecer `🚀 Backend ouvindo na porta 3002`, crie o primeiro administrador em outro terminal:
 
 ```bash
-# Dev
-npm run dev              # Backend + Frontend juntos
-npm run dev:backend      # Só backend
-npm run dev:frontend     # Só frontend
-
-# Produção
-npm start                # Backend em modo produção
-
-# Frontend
-npm run build            # Build do frontend
-npm run vercel-build     # Build especial para Vercel
-
-# Utilidades
-npm run install:all      # Instala backend + frontend
-npm run clean            # Remove dependências e dist
+docker compose exec -e ADMIN_EMAIL=voce@exemplo.com -e ADMIN_PASSWORD='senha-forte-aqui' backend npm run create-admin
 ```
 
----
+- Frontend: http://localhost:5173
+- API: http://localhost:3002/api
+- Postgres: `localhost:5433` (usuário e senha `postgres`)
 
-#  Configuração Importante
+As imagens copiam o código no build, então não há hot reload: depois de alterar o código, rode `docker compose up --build` de novo. Para hot reload, use a execução sem Docker.
 
-* Todo tráfego `/api/*` no frontend é roteado automaticamente para o backend.
-* O sistema utiliza **PostgreSQL** + **Sequelize**.
-* O backend utiliza:
-
-  * JWT para autenticação
-  * Middlewares personalizados
-  * Validação de sessão
-* O frontend utiliza:
-
-  * React + Vite
-  * Axios para requisições
+Produção com Docker (`docker-compose.prod.yml`) está descrita em [DOCKER.md](DOCKER.md).
 
 ---
 
-# Funcionalidades
+## Rodando sem Docker
 
-* Cadastro de usuários
-* Login e autenticação com JWT
-* Rota protegidas
-* Integração completa com PostgreSQL
-* Interface moderna em React
+Requisitos: Node.js 20+ e um PostgreSQL acessível.
+
+```bash
+npm run install:all
+```
+
+Crie `backend/.env` a partir do [.env.example](.env.example). Em desenvolvimento, o mínimo é:
+
+```env
+NODE_ENV=development
+PGHOST=localhost
+PGPORT=5432
+PGUSER=postgres
+PGPASSWORD=sua_senha
+PGDATABASE=sistema_cadastro
+```
+
+Prepare o banco e crie o primeiro administrador:
+
+```bash
+cd backend
+npm run migrate
+ADMIN_EMAIL=voce@exemplo.com ADMIN_PASSWORD='senha-forte-aqui' npm run create-admin
+cd ..
+```
+
+Suba backend (nodemon) e frontend (Vite) juntos, com hot reload:
+
+```bash
+npm run dev
+```
+
+O Vite encaminha `/api` para `http://localhost:3002`. Para outro endereço, defina `VITE_API_TARGET`.
 
 ---
 
-# Segurança
+## Testes
 
-* `.env` nunca é enviado para o cliente
-* API não fica exposta em produção (somente via Nginx)
-* Reverse proxy configurado corretamente
-* Secrets protegidos
-* Dockerfile sem node_modules ou lixo
+```bash
+# Postgres descartável para os testes do backend
+docker run -d --rm --name sc-test-pg -e POSTGRES_PASSWORD=postgres -p 55432:5432 postgres:16
+
+npm test                      # webhook + backend
+cd frontend && npm test       # Vitest + Testing Library
+cd frontend && npm run lint   # ESLint
+```
+
+Os testes do backend usam o banco `sistema_cadastro_test` em `localhost:55432`. Para usar outro servidor, defina `TEST_PGHOST`, `TEST_PGPORT`, `TEST_PGUSER`, `TEST_PGPASSWORD` e `TEST_PGDATABASE`.
+
+O CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) roda testes, lint, build e `npm audit` (bloqueia high/critical) em cada PR.
 
 ---
 
-# Licença
+## Deploy em produção (aaPanel + PM2)
 
-Licença **ISC**.
+O servidor serve o build do frontend pelo nginx, roda o backend no PM2 (porta 3002) e recebe pushes do GitHub pelo webhook (porta 3003).
 
+### Primeira instalação
+
+1. Clone o repositório no servidor e crie `backend/.env` com, no mínimo, `NODE_ENV=production`, `SESSION_SECRET` e as variáveis `PG*` (veja o [.env.example](.env.example)). O backend não inicia sem `SESSION_SECRET` em produção. Para gerar um segredo:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+   ```
+2. Rode o deploy e crie o primeiro administrador:
+   ```bash
+   npm run deploy:aapanel
+   cd backend && ADMIN_EMAIL=voce@exemplo.com ADMIN_PASSWORD='senha-forte-aqui' npm run create-admin
+   ```
+3. Instale as configs de [nginx-config/](nginx-config/) no nginx do servidor e recarregue. `/api/` vai para o backend (3002) e `/webhook/` para o webhook (3003).
+
+### Deploy automático pelo webhook
+
+1. Inicie o webhook com o segredo no ambiente. Ele não lê `.env`, e o segredo não deve ir para o arquivo do PM2:
+   ```bash
+   WEBHOOK_SECRET='segredo-forte' npm run webhook:start
+   pm2 save
+   ```
+2. No GitHub, em **Settings → Webhooks**, use a URL `https://deploy.chatflows.com.br/webhook/deploy`, o content type `application/json`, o mesmo segredo e o evento **push**.
+
+Cada push na `main` roda [scripts/deploy-aapanel.sh](scripts/deploy-aapanel.sh): `git pull`, `npm ci`, migrations, build do frontend e restart do backend no PM2. O webhook responde na hora (202) e o deploy continua em background; se chegar outro push durante um deploy, ele responde 409. O resultado aparece em `npm run webhook:logs`.
+
+Para deploy manual, rode `npm run deploy:aapanel` no servidor.
+
+---
+
+## Scripts
+
+| Onde | Comando | O que faz |
+|---|---|---|
+| raiz | `npm run dev` | Backend (nodemon) + frontend (Vite) |
+| raiz | `npm run install:all` | Instala dependências da raiz, backend e frontend |
+| raiz | `npm test` | Testes do webhook + backend |
+| raiz | `npm run deploy:aapanel` | Deploy no servidor |
+| raiz | `npm run pm2:start` / `pm2:restart` / `pm2:logs` | Backend no PM2 |
+| raiz | `npm run webhook:start` / `webhook:logs` | Webhook no PM2 |
+| backend | `npm run migrate` / `migrate:down` | Aplica migrations pendentes / reverte a última |
+| backend | `npm run create-admin` | Cria ou promove admin (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) |
+| frontend | `npm run build` | Build de produção em `frontend/dist` |
+
+---
+
+## Como funciona
+
+- **Rotas**: o backend monta tudo sob `/api`, e nginx e Vite encaminham `/api/*` para ele.
+- **Banco**: PostgreSQL + Sequelize, com schema versionado em `backend/db/migrations`. O backend não altera o schema ao iniciar; isso é feito por `npm run migrate`.
+- **Autenticação por sessão**: cookie `httpOnly`, `Secure` em produção, com as sessões guardadas no Postgres (`connect-pg-simple`). O ID da sessão é regenerado no login. Se o acesso não passar por HTTPS, defina `COOKIE_SECURE=false`.
+- **Perfis**: `user` ou `admin`. O cadastro público sempre cria `user`. O primeiro admin vem do `create-admin`; depois disso, admins criam usuários e alteram perfis pelo painel. O admin não altera o próprio perfil nem exclui a própria conta, e o sistema nunca fica sem administrador.
+- **Acesso sempre atual**: o usuário da sessão é relido do banco a cada requisição. Rebaixar ou excluir alguém tira o acesso na hora.
+- **E-mails** são guardados em minúsculas, sem espaços nas pontas. A migration `004-normalize-emails` aborta, sem alterar nada, se houver contas que só diferem na caixa; exclua ou altere as extras e rode `npm run migrate` de novo.
+
+## Segurança
+
+- `SESSION_SECRET` obrigatório em produção, e `WEBHOOK_SECRET` obrigatório para o webhook iniciar
+- Rate limit em login e cadastro
+- Mensagem de erro de login genérica, que não revela se o e-mail existe
+- Validação de entrada no backend (senha de 8 a 72 bytes)
+- Webhook valida a assinatura HMAC do GitHub sobre o corpo bruto da requisição
+
+---
+
+## Licença
+
+ISC.

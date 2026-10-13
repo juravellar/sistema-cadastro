@@ -1,12 +1,14 @@
 FROM node:20
 
+ENV NODE_ENV=production
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 COPY . .
 
+USER node
 EXPOSE 3002
 
 CMD ["npm", "start"]

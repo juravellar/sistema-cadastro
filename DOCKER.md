@@ -1,163 +1,55 @@
 # 🐳 Guia de Uso com Docker
 
-Este guia explica como executar o sistema completo usando apenas Docker.
-
-## 📋 Pré-requisitos
-
-- Docker instalado
-- Docker Compose instalado
-
-## 🚀 Modo Produção
-
-Para rodar o sistema em modo produção (com build otimizado):
+## 🔧 Desenvolvimento
 
 ```bash
-docker-compose up -d
+docker compose up --build
 ```
 
-Isso irá:
-- ✅ Iniciar o PostgreSQL
-- ✅ Iniciar o pgAdmin (opcional, para gerenciar o banco)
-- ✅ Buildar e iniciar o backend
-- ✅ Buildar e iniciar o frontend (com nginx)
+- PostgreSQL (exposto em `localhost:5433`)
+- Backend em `http://localhost:3002`: aplica as migrations (`npm run migrate`) antes de iniciar
+- Frontend (Vite) em `http://localhost:5173`, com proxy de `/api` para o backend (`VITE_API_TARGET`)
 
-### Acessos:
-
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3002
-- **pgAdmin**: http://localhost:5050
-  - Email: `admin@admin.com`
-  - Senha: `admin`
-
-## 🔧 Modo Desenvolvimento
-
-Para rodar em modo desenvolvimento (com hot-reload):
+Crie o primeiro administrador:
 
 ```bash
-docker-compose -f docker-compose.dev.yml up
+docker compose exec -e ADMIN_EMAIL=voce@exemplo.com -e ADMIN_PASSWORD='senha-forte-aqui' backend npm run create-admin
 ```
 
-Isso irá:
-- ✅ Iniciar o PostgreSQL
-- ✅ Iniciar o pgAdmin
-- ✅ Iniciar o backend com nodemon (hot-reload)
-- ✅ Iniciar o frontend com Vite (hot-reload)
+## 🚀 Produção
 
-### Acessos:
-
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3002
-- **pgAdmin**: http://localhost:5050
-
-## 📝 Comandos Úteis
-
-### Ver logs dos containers:
+1. Copie `.env.example` para `.env` e preencha ao menos `SESSION_SECRET`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` e `FRONTEND_URL`.
+2. Suba os serviços:
 
 ```bash
-# Todos os serviços
-docker-compose logs -f
-
-# Apenas backend
-docker-compose logs -f backend
-
-# Apenas frontend
-docker-compose logs -f frontend
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-### Parar os containers:
+- `postgres`: dados no volume `pgdata`
+- `backend`: roda as migrations e depois inicia (`NODE_ENV=production`)
+- `nginx`: builda o frontend e serve na porta 80, com proxy de `/api/` para o backend
+
+O cookie de sessão é `Secure` em produção. Se o acesso não passar por HTTPS (TLS terminado antes do nginx), defina `COOKIE_SECURE=false` no `.env`.
+
+Crie o primeiro administrador:
 
 ```bash
-docker-compose down
+docker compose -f docker-compose.prod.yml exec -e ADMIN_EMAIL=voce@exemplo.com -e ADMIN_PASSWORD='senha-forte-aqui' backend npm run create-admin
 ```
-
-### Parar e remover volumes (limpar banco de dados):
-
-```bash
-docker-compose down -v
-```
-
-### Rebuild dos containers (após mudanças no código):
-
-```bash
-# Produção
-docker-compose up -d --build
-
-# Desenvolvimento
-docker-compose -f docker-compose.dev.yml up --build
-```
-
-### Executar comandos dentro de um container:
-
-```bash
-# Backend
-docker-compose exec backend sh
-
-# Frontend
-docker-compose exec frontend sh
-```
-
-## 🔐 Variáveis de Ambiente
-
-As variáveis de ambiente podem ser configuradas através de um arquivo `.env` na raiz do projeto ou diretamente no `docker-compose.yml`.
-
-### Variáveis importantes:
-
-- `SESSION_SECRET`: Segredo para sessões (altere em produção!)
-- `PGPASSWORD`: Senha do PostgreSQL
-- `PGADMIN_DEFAULT_PASSWORD`: Senha do pgAdmin
 
 ## 🗄️ Banco de Dados
 
-O PostgreSQL é iniciado automaticamente e os dados são persistidos em um volume Docker chamado `pgdata_sistema_cadastro`.
-
-### Conectar ao banco via linha de comando:
+O schema é versionado em `backend/db/migrations` (Umzug). O backend **não** altera o schema no boot.
 
 ```bash
-docker-compose exec postgres psql -U postgres -d sistema-cadastro
+docker compose exec backend npm run migrate        # aplica pendentes
+docker compose exec backend npm run migrate:down   # reverte a última
+docker compose exec postgres psql -U postgres -d sistema_cadastro
+docker compose exec postgres pg_dump -U postgres sistema_cadastro > backup.sql
 ```
 
-### Backup do banco:
+## 📦 Dockerfiles
 
-```bash
-docker-compose exec postgres pg_dump -U postgres sistema-cadastro > backup.sql
-```
-
-### Restaurar backup:
-
-```bash
-docker-compose exec -T postgres psql -U postgres sistema-cadastro < backup.sql
-```
-
-## 🐛 Troubleshooting
-
-### Container não inicia:
-
-```bash
-# Ver logs de erro
-docker-compose logs [nome-do-servico]
-
-# Verificar status
-docker-compose ps
-```
-
-### Porta já em uso:
-
-Altere as portas no `docker-compose.yml` se necessário.
-
-### Rebuild completo:
-
-```bash
-# Remove containers, volumes e imagens
-docker-compose down -v --rmi all
-
-# Rebuild tudo
-docker-compose up -d --build
-```
-
-## 📦 Estrutura dos Dockerfiles
-
-- `backend/Dockerfile`: Produção (otimizado)
-- `backend/Dockerfile.dev`: Desenvolvimento (com nodemon)
-- `frontend/Dockerfile`: Produção (build + nginx)
-- `frontend/Dockerfile.dev`: Desenvolvimento (Vite dev server)
-
+- `backend/Dockerfile`: imagem do backend (dev e prod; o compose de dev sobrescreve `NODE_ENV`)
+- `frontend/Dockerfile.dev`: Vite dev server
+- `nginx/Dockerfile`: build do frontend + nginx (contexto: raiz do repositório)
