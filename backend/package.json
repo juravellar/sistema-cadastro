@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www",
+    "dev": "NODE_ENV=development nodemon ./bin/www",
     "migrate": "node db/migrate.js",
     "migrate:down": "node db/migrate.js down",
     "create-db": "node scripts/create-database.js",

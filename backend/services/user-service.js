@@ -17,14 +17,13 @@ const {
 
 const BCRYPT_ROUNDS = 10;
 // Comparar contra um hash real quando o e-mail não existe iguala o tempo de
-// resposta e impede descobrir quais e-mails estão cadastrados. Gerado de forma
-// assíncrona no primeiro uso: na importação pesaria nos scripts, e com hashSync
-// travaria o servidor durante o primeiro login.
-let dummyHashPromise;
-function getDummyHash() {
-  dummyHashPromise ??= bcrypt.hash("dummy-password-for-timing", BCRYPT_ROUNDS);
-  return dummyHashPromise;
-}
+// resposta e impede descobrir quais e-mails estão cadastrados. É um hash fixo
+// (de um valor aleatório descartado), com o mesmo custo de BCRYPT_ROUNDS: gerar
+// em tempo de execução criaria uma janela no boot e um modo de falha que
+// voltariam a diferenciar e-mails. Ao mudar BCRYPT_ROUNDS, gere outro:
+// node -e 'console.log(require("bcrypt").hashSync(require("crypto").randomBytes(32).toString("hex"), 10))'
+const DUMMY_PASSWORD_HASH = "$2b$10$mo/BwktrGUfxVK1rC.pGaOFsdP/SA9l7u5443HI2Mg/5ZwOayWA1O";
+
 const PUBLIC_ATTRIBUTES = ["id", "username", "email", "role"];
 const LAST_ADMIN_MESSAGE = "O sistema precisa de pelo menos um administrador.";
 
@@ -87,7 +86,7 @@ async function authenticate({ email, password }) {
   const user = await User.findOne({ where: { email: normalizeEmail(email) } });
   const passwordMatches = await bcrypt.compare(
     password,
-    user ? user.password : await getDummyHash()
+    user ? user.password : DUMMY_PASSWORD_HASH
   );
   if (!user || !passwordMatches) throw new AuthenticationError("Credenciais inválidas");
   return user;
@@ -181,6 +180,8 @@ async function deleteUser({ actorId, user }) {
 }
 
 module.exports = {
+  BCRYPT_ROUNDS,
+  DUMMY_PASSWORD_HASH,
   toPublicUser,
   hashPassword,
   register,
