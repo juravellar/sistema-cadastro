@@ -4,6 +4,7 @@ const rateLimit = require("express-rate-limit");
 const { User } = require("../models");
 const { requireAuth } = require("../middlewares/auth");
 const {
+  normalizeEmail,
   validateEmail,
   validatePassword,
   validateUsername,
@@ -51,14 +52,14 @@ function createAuthRouter({ authRateLimit = 10 } = {}) {
     if (error) return res.status(400).json({ success: false, message: error });
 
     try {
-      const existingUser = await User.findOne({ where: { email } });
+      const existingUser = await User.findOne({ where: { email: normalizeEmail(email) } });
       if (existingUser) {
         return res.status(409).json({ success: false, message: "Email já cadastrado" });
       }
 
       const user = await User.create({
         username: username.trim(),
-        email: email.trim(),
+        email,
         password: await bcrypt.hash(password, BCRYPT_ROUNDS),
         role: User.ROLES.USER,
       });
@@ -83,7 +84,7 @@ function createAuthRouter({ authRateLimit = 10 } = {}) {
     }
 
     try {
-      const user = await User.findOne({ where: { email } });
+      const user = await User.findOne({ where: { email: normalizeEmail(email) } });
       const passwordMatches = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
 
       if (!user || !passwordMatches) {

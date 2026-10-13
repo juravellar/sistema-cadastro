@@ -3,7 +3,7 @@
 require("dotenv").config();
 const bcrypt = require("bcrypt");
 const { sequelize, User } = require("../models");
-const { validatePassword, validateEmail } = require("../lib/validation");
+const { validatePassword, validateEmail, normalizeEmail } = require("../lib/validation");
 
 async function createAdmin() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_USERNAME = "admin" } = process.env;
@@ -14,7 +14,7 @@ async function createAdmin() {
   const emailError = validateEmail(ADMIN_EMAIL);
   if (emailError) throw new Error(`ADMIN_EMAIL: ${emailError}`);
 
-  const existing = await User.findOne({ where: { email: ADMIN_EMAIL } });
+  const existing = await User.findOne({ where: { email: normalizeEmail(ADMIN_EMAIL) } });
 
   if (existing) {
     existing.role = User.ROLES.ADMIN;

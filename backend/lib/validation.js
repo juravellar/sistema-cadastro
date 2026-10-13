@@ -4,6 +4,16 @@ const MIN_PASSWORD_LENGTH = 8;
 // bcrypt ignora silenciosamente tudo além de 72 bytes.
 const MAX_PASSWORD_BYTES = 72;
 
+const ROLES = ["user", "admin"];
+
+function normalizeEmail(email) {
+  return typeof email === "string" ? email.trim().toLowerCase() : email;
+}
+
+function validateRole(role) {
+  return ROLES.includes(role) ? null : `Perfil inválido. Use: ${ROLES.join(", ")}`;
+}
+
 function validateEmail(email) {
   if (typeof email !== "string" || !email.trim()) return "Email é obrigatório";
   if (email.length > MAX_FIELD_LENGTH || !EMAIL_RE.test(email)) return "Email inválido";
@@ -37,6 +47,8 @@ function parseId(raw) {
 }
 
 module.exports = {
+  normalizeEmail,
+  validateRole,
   validateEmail,
   validatePassword,
   validateUsername,

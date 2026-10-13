@@ -1,4 +1,5 @@
 const { DataTypes } = require("sequelize");
+const { normalizeEmail } = require("../lib/validation");
 
 const ROLES = Object.freeze({ USER: "user", ADMIN: "admin" });
 
@@ -24,6 +25,9 @@ module.exports = (sequelize) => {
         allowNull: false,
         unique: true,
         validate: { isEmail: true },
+        set(value) {
+          this.setDataValue("email", normalizeEmail(value));
+        },
       },
       role: {
         type: DataTypes.ENUM(ROLES.USER, ROLES.ADMIN),

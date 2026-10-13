@@ -80,11 +80,11 @@ describe("auth", () => {
       });
     }
 
-    it("retorna 409 para e-mail duplicado", async () => {
+    it("retorna 409 para e-mail duplicado, mesmo com outra caixa", async () => {
       await createUser({ email: "dup@example.com" });
       const res = await request(app)
         .post("/api/signup")
-        .send({ username: "d", email: "dup@example.com", password: PASSWORD });
+        .send({ username: "d", email: "DUP@Example.com", password: PASSWORD });
       assert.equal(res.status, 409);
     });
   });
@@ -115,6 +115,15 @@ describe("auth", () => {
       assert.equal(wrongPassword.status, 401);
       assert.equal(unknownEmail.status, 401);
       assert.deepEqual(wrongPassword.body, unknownEmail.body);
+    });
+
+    it("ignora maiúsculas e espaços no e-mail", async () => {
+      await createUser({ email: "Mixed@Example.com" });
+      const res = await request(app)
+        .post("/api/login")
+        .send({ email: "  MIXED@example.COM ", password: PASSWORD });
+      assert.equal(res.status, 200);
+      assert.equal(res.body.user.email, "mixed@example.com");
     });
 
     it("retorna 400 sem credenciais", async () => {

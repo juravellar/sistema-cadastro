@@ -3,8 +3,10 @@ const bcrypt = require("bcrypt");
 const { User } = require("../models");
 const { requireAdmin } = require("../middlewares/auth");
 const {
+  normalizeEmail,
   validateEmail,
   validatePassword,
+  validateRole,
   validateUsername,
   firstError,
   parseId,
@@ -13,9 +15,14 @@ const {
 const PUBLIC_ATTRIBUTES = ["id", "username", "email", "role"];
 const DEFAULT_PAGE_SIZE = 50;
 const MAX_PAGE_SIZE = 100;
+const BCRYPT_ROUNDS = 10;
 
 function toPublicUser(user) {
   return { id: user.id, username: user.username, email: user.email, role: user.role };
+}
+
+function badRequest(res, message) {
+  return res.status(400).json({ success: false, message });
 }
 
 function parsePagination(query) {
@@ -24,13 +31,20 @@ function parsePagination(query) {
   return { limit, offset };
 }
 
+function emailTaken(email, exceptId) {
+  return User.findOne({ where: { email: normalizeEmail(email) } }).then(
+    (existing) => Boolean(existing) && existing.id !== exceptId
+  );
+}
+
+async function isLastAdmin(user) {
+  if (user.role !== User.ROLES.ADMIN) return false;
+  return (await User.count({ where: { role: User.ROLES.ADMIN } })) <= 1;
+}
+
 function requireValidId(req, res, next) {
   const id = parseId(req.params.id);
-  if (id === null) {
-    return res
-      .status(400)
-      .json({ success: false, message: "ID inválido. O ID deve ser numérico." });
-  }
+  if (id === null) return badRequest(res, "ID inválido. O ID deve ser numérico.");
   req.userId = id;
   next();
 }
@@ -67,38 +81,69 @@ router.get("/users", requireAdmin, async (req, res, next) => {
   }
 });
 
+router.post("/users", requireAdmin, async (req, res, next) => {
+  const { username, email, password, role = User.ROLES.USER } = req.body;
+  const error = firstError(
+    validateUsername(username),
+    validateEmail(email),
+    validatePassword(password),
+    validateRole(role)
+  );
+  if (error) return badRequest(res, error);
+
+  try {
+    if (await emailTaken(email)) {
+      return res.status(409).json({ success: false, message: "Email já cadastrado" });
+    }
+
+    const user = await User.create({
+      username: username.trim(),
+      email,
+      password: await bcrypt.hash(password, BCRYPT_ROUNDS),
+      role,
+    });
+    res.status(201).json({ success: true, user: toPublicUser(user) });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, (req, res) => {
   res.json({ success: true, user: toPublicUser(req.targetUser) });
 });
 
 router.put("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, async (req, res, next) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
   const error = firstError(
     username !== undefined && validateUsername(username),
     email !== undefined && validateEmail(email),
-    password !== undefined && password !== "" && validatePassword(password)
+    password !== undefined && password !== "" && validatePassword(password),
+    role !== undefined && validateRole(role)
   );
-  if (error) return res.status(400).json({ success: false, message: error });
+  if (error) return badRequest(res, error);
 
   const user = req.targetUser;
+  const changesRole = role !== undefined && role !== user.role;
+
   try {
-    if (email !== undefined && email !== user.email) {
-      const existingUser = await User.findOne({ where: { email } });
-      if (existingUser) {
-        return res
-          .status(409)
-          .json({ success: false, message: "Email já cadastrado por outro usuário." });
-      }
-      user.email = email.trim();
+    if (changesRole && user.id === req.session.user.id) {
+      return badRequest(res, "Você não pode alterar o seu próprio perfil.");
     }
+    if (changesRole && (await isLastAdmin(user))) {
+      return badRequest(res, "O sistema precisa de pelo menos um administrador.");
+    }
+    if (email !== undefined && (await emailTaken(email, user.id))) {
+      return res
+        .status(409)
+        .json({ success: false, message: "Email já cadastrado por outro usuário." });
+    }
+
+    if (email !== undefined) user.email = email;
     if (username !== undefined) user.username = username.trim();
-    if (password) user.password = await bcrypt.hash(password, 10);
+    if (password) user.password = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    if (changesRole) user.role = role;
 
     await user.save();
-
-    if (req.session.user.id === user.id) {
-      req.session.user = user.toSessionUser();
-    }
 
     res.json({
       success: true,
@@ -111,14 +156,16 @@ router.put("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, async (
 });
 
 router.delete("/user/id/:id", requireAdmin, requireValidId, loadTargetUser, async (req, res, next) => {
-  if (req.session.user.id === req.userId) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Você não pode excluir sua própria conta." });
-  }
+  const user = req.targetUser;
 
   try {
-    const user = req.targetUser;
+    if (user.id === req.session.user.id) {
+      return badRequest(res, "Você não pode excluir sua própria conta.");
+    }
+    if (await isLastAdmin(user)) {
+      return badRequest(res, "O sistema precisa de pelo menos um administrador.");
+    }
+
     await user.destroy();
     res.json({
       success: true,
