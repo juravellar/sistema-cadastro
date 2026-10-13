@@ -1,6 +1,8 @@
 const { ValidationError } = require("./errors");
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Domínio final com 2+ letras, como o validator isEmail do model exige:
+// sem isso o e-mail passa aqui e falha no banco.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/;
 const MAX_FIELD_LENGTH = 200;
 const MIN_PASSWORD_LENGTH = 8;
 // bcrypt ignora silenciosamente tudo além de 72 bytes.

@@ -187,6 +187,8 @@ Todas as rotas ficam sob `/api` e respondem JSON no formato `{ success, message?
 
 Login, cadastro e troca de senha têm rate limit compartilhado (10 tentativas a cada 15 minutos por IP).
 
+As rotas anteriores à padronização REST (`/api/login`, `/api/user/profile`, `/api/user/id/:id` etc.) respondem **410** com "O sistema foi atualizado. Recarregue a página.", para avisar quem estiver com o frontend antigo aberto.
+
 ---
 
 ## Como funciona

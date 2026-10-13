@@ -39,7 +39,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/pt-br/), em portu
 - `routes/` só traduz HTTP: lê a requisição, chama o serviço, responde e cuida da sessão.
 - Regras de negócio ficam em `services/`. Erros de negócio são lançados com as classes de `lib/errors.js` (`ValidationError`, `ConflictError`, etc.), que carregam o status HTTP. O error handler de `app.js` monta a resposta.
 - Com Express 5, handlers `async` não precisam de `try/catch`: erros chegam ao error handler sozinhos.
-- Variáveis de ambiente são lidas só em `config.js`. Variável nova: adicione a `config.js` e ao `.env.example`.
+- Variáveis de ambiente são lidas só em `config.js`. Variável nova: adicione a `config.js` e ao `.env.example`. Se só o servidor HTTP usa a variável, coloque em `serverConfig()`, para que um valor errado não impeça `migrate` e `create-admin` de rodar.
 - Mudança de schema: nova migration em `db/migrations/` (`NNN-descricao.js`), idempotente e com `down`. Nunca altere uma migration já publicada.
 - Rotas seguem REST: recurso no plural (`/api/users/:id`) e a própria conta em `/api/me`.
 

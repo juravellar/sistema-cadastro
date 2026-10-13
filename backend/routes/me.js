@@ -16,7 +16,7 @@ function createMeRouter({ authLimiter }) {
     res.json({ success: true, user: req.session.user });
   });
 
-  router.put("/password", authLimiter, requireAuth, async (req, res) => {
+  router.put("/password", requireAuth, authLimiter, async (req, res) => {
     const user = await userService.changePassword(req.currentUser, req.body ?? {});
     await startSession(req, user);
     res.json({ success: true, message: "Senha alterada. Outras sessões foram encerradas." });

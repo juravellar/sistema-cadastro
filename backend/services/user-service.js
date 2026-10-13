@@ -49,34 +49,7 @@ async function ensureNotLastAdmin(user, transaction) {
   if (admins.length <= 1) throw new ValidationError(LAST_ADMIN_MESSAGE);
 }
 
-async function register({ username, email, password }) {
-  assertValid(
-    validateUsername(username),
-    validateEmail(normalizeEmail(email)),
-    validatePassword(password)
-  );
-  await ensureEmailAvailable(email, { message: "Email já cadastrado" });
-
-  return User.create({
-    username: username.trim(),
-    email,
-    password: await hashPassword(password),
-    role: User.ROLES.USER,
-  });
-}
-
-async function authenticate({ email, password }) {
-  if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
-    throw new ValidationError("Email e senha são obrigatórios");
-  }
-
-  const user = await User.findOne({ where: { email: normalizeEmail(email) } });
-  const passwordMatches = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
-  if (!user || !passwordMatches) throw new AuthenticationError("Credenciais inválidas");
-  return user;
-}
-
-async function updateProfile(user, { username, email }) {
+async function applyProfileChanges(user, { username, email }) {
   assertValid(
     username !== undefined && validateUsername(username),
     email !== undefined && validateEmail(normalizeEmail(email))
@@ -89,7 +62,26 @@ async function updateProfile(user, { username, email }) {
     user.email = email;
   }
   if (username !== undefined) user.username = username.trim();
+}
+
+function register({ username, email, password }) {
+  return createUser({ username, email, password, role: User.ROLES.USER });
+}
+
+async function updateProfile(user, changes) {
+  await applyProfileChanges(user, changes);
   return user.save();
+}
+
+async function authenticate({ email, password }) {
+  if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
+    throw new ValidationError("Email e senha são obrigatórios");
+  }
+
+  const user = await User.findOne({ where: { email: normalizeEmail(email) } });
+  const passwordMatches = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
+  if (!user || !passwordMatches) throw new AuthenticationError("Credenciais inválidas");
+  return user;
 }
 
 async function changePassword(user, { currentPassword, newPassword }) {
@@ -141,8 +133,6 @@ async function createUser({ username, email, password, role = User.ROLES.USER })
 async function updateUser({ actorId, user, changes }) {
   const { username, email, password, role } = changes;
   assertValid(
-    username !== undefined && validateUsername(username),
-    email !== undefined && validateEmail(normalizeEmail(email)),
     password !== undefined && password !== "" && validatePassword(password),
     role !== undefined && validateRole(role)
   );
@@ -158,19 +148,11 @@ async function updateUser({ actorId, user, changes }) {
   if (password && isSelf) {
     throw new ValidationError("Para trocar a sua senha, use a página Minha conta.");
   }
-  if (email !== undefined) {
-    await ensureEmailAvailable(email, {
-      exceptId: user.id,
-      message: "Email já cadastrado por outro usuário.",
-    });
-  }
+  await applyProfileChanges(user, { username, email });
 
   const passwordHash = password ? await hashPassword(password) : null;
   await sequelize.transaction(async (transaction) => {
     if (changesRole) await ensureNotLastAdmin(user, transaction);
-
-    if (email !== undefined) user.email = email;
-    if (username !== undefined) user.username = username.trim();
     if (passwordHash) user.password = passwordHash;
     if (changesRole) user.role = role;
     await user.save({ transaction });
@@ -191,6 +173,7 @@ async function deleteUser({ actorId, user }) {
 
 module.exports = {
   toPublicUser,
+  hashPassword,
   register,
   authenticate,
   updateProfile,

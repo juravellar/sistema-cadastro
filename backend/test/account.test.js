@@ -125,6 +125,21 @@ describe("conta do próprio usuário", () => {
       assert.equal(res.status, 400);
     });
 
+    it("requisições sem sessão não gastam o limite de tentativas do login", async () => {
+      const limitedApp = buildApp({ authRateLimit: 2 });
+      const anonymous = () =>
+        request(limitedApp)
+          .put("/api/me/password")
+          .send({ currentPassword: "x", newPassword: NEW_PASSWORD });
+
+      assert.equal((await anonymous()).status, 401);
+      assert.equal((await anonymous()).status, 401);
+      const login = await request(limitedApp)
+        .post("/api/auth/login")
+        .send({ email: "maria@example.com", password: PASSWORD });
+      assert.equal(login.status, 200);
+    });
+
     it("aplica rate limit", async () => {
       const limitedApp = buildApp({ authRateLimit: 3 });
       const limitedAgent = await loginAgent(limitedApp, "maria@example.com");

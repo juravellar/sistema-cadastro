@@ -2,9 +2,9 @@
 
 const http = require("http");
 const createApp = require("../app");
-const { config } = require("../config");
+const { serverConfig } = require("../config");
 
-const { port } = config;
+const { port } = serverConfig();
 const app = createApp();
 app.set("port", port);
 
