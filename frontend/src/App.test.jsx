@@ -24,7 +24,7 @@ describe("guards de rota", () => {
     mockApi({ sessionUser: USER });
     renderAt("/home-admin");
 
-    expect(await screen.findByText(`Bem-vindo, ${USER.username}!`)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: /, maria!$/ })).toBeInTheDocument();
     expect(window.location.pathname).toBe("/home");
   });
 
@@ -54,7 +54,7 @@ describe("guards de rota", () => {
     mockApi({ sessionUser: { ...USER, email: "x@admin.evil.com" } });
     renderAt("/home-admin");
 
-    expect(await screen.findByText(`Bem-vindo, ${USER.username}!`)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: /, maria!$/ })).toBeInTheDocument();
     expect(window.location.pathname).toBe("/home");
   });
 });

@@ -16,13 +16,21 @@ async function loadCurrentUser(req) {
   if (!req.session.user) return null;
 
   const user = await User.findByPk(req.session.user.id);
-  if (!user) {
+  if (!user || openedBeforePasswordChange(req.session, user)) {
     await destroySession(req);
     return null;
   }
 
+  req.currentUser = user;
   req.session.user = user.toSessionUser();
   return req.session.user;
+}
+
+// Trocar a senha encerra as outras sessões: quem roubou um cookie perde o
+// acesso assim que o dono troca a senha.
+function openedBeforePasswordChange(session, user) {
+  if (!user.passwordChangedAt) return false;
+  return !session.authAt || user.passwordChangedAt.getTime() > session.authAt;
 }
 
 function requireAuth(req, res, next) {

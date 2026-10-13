@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const EMPTY_FORM = { username: "", email: "", password: "", role: "user" };
 
@@ -67,20 +68,26 @@ function UserFormModal({ user, isSelf = false, onSubmit, onClose }) {
                 required
               />
             </div>
-            <div className="mb-3">
-              <label htmlFor="userPassword" className="form-label">
-                {isEdit ? "Nova senha (opcional)" : "Senha"}
-              </label>
-              <input
-                id="userPassword"
-                type="password"
-                className="form-control"
-                value={form.password}
-                onChange={update("password")}
-                minLength={8}
-                required={!isEdit}
-              />
-            </div>
+            {isSelf ? (
+              <p className="form-text mb-3">
+                Para trocar a sua senha, use a página <Link to="/home">Minha conta</Link>.
+              </p>
+            ) : (
+              <div className="mb-3">
+                <label htmlFor="userPassword" className="form-label">
+                  {isEdit ? "Nova senha (opcional)" : "Senha"}
+                </label>
+                <input
+                  id="userPassword"
+                  type="password"
+                  className="form-control"
+                  value={form.password}
+                  onChange={update("password")}
+                  minLength={8}
+                  required={!isEdit}
+                />
+              </div>
+            )}
             <div className="mb-3">
               <label htmlFor="userRole" className="form-label">
                 Perfil

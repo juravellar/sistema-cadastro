@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App";
 import { mockApi, callsTo, ADMIN, USER } from "../test/mockApi";
@@ -98,4 +98,57 @@ describe("painel admin", () => {
       role: "admin",
     });
   });
+
+  it("sessão encerrada no servidor leva ao login com aviso", async () => {
+    let api;
+    api = renderAdminPanel({
+      "POST /api/users": () => [401, { success: false, message: "Usuário não autenticado" }],
+    });
+    await screen.findByRole("heading", { name: "Usuários" });
+    api.fetchMock.setSessionUser(null);
+
+    await userEvent.click(screen.getByRole("button", { name: "Novo Usuário" }));
+    const form = screen.getByRole("form", { name: "Formulário de usuário" });
+    await userEvent.type(within(form).getByLabelText("Usuário"), "x");
+    await userEvent.type(within(form).getByLabelText("Email"), "x@example.com");
+    await userEvent.type(within(form).getByLabelText("Senha"), "senha-segura-123");
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
+
+    expect(await screen.findByText("Sua sessão foi encerrada. Entre novamente.")).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/");
+  });
+
+  it("admin rebaixado durante o uso vai para a home", async () => {
+    let api;
+    api = renderAdminPanel({
+      "PUT /api/user/id/2": () => [403, { success: false, message: "Apenas administradores" }],
+    });
+    await screen.findByRole("heading", { name: "Usuários" });
+    api.fetchMock.setSessionUser({ ...ADMIN, role: "user" });
+
+    await userEvent.click(within(await rowOf(USER.email)).getByRole("button", { name: "Editar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() => expect(window.location.pathname).toBe("/home"));
+  });
+
+  it("editar a própria conta não oferece troca de senha e aponta para Minha conta", async () => {
+    renderAdminPanel();
+
+    await userEvent.click(within(await rowOf(ADMIN.email)).getByRole("button", { name: "Editar" }));
+
+    const form = screen.getByRole("form", { name: "Formulário de usuário" });
+    expect(within(form).queryByLabelText(/senha/i)).not.toBeInTheDocument();
+    expect(within(form).getByRole("link", { name: "Minha conta" })).toHaveAttribute("href", "/home");
+  });
+
+  it("leva à página Minha conta pelo cabeçalho", async () => {
+    renderAdminPanel();
+
+    await userEvent.click(await screen.findByRole("link", { name: "Minha conta" }));
+
+    expect(await screen.findByRole("region", { name: "Alterar senha" })).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/home");
+  });
 });
+

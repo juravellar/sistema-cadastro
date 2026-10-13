@@ -13,16 +13,23 @@ function Spinner({ label }) {
   );
 }
 
-function RedirectToLogin({ notice }) {
-  const { hasSignedOut } = useAuth();
-  return <Navigate to="/" replace state={hasSignedOut ? undefined : { notice }} />;
+const NOTICES = {
+  expired: "Sua sessão foi encerrada. Entre novamente.",
+  missing: "Faça login para acessar esta página.",
+};
+
+function RedirectToLogin() {
+  const { sessionEnd } = useAuth();
+  if (sessionEnd === "signedOut") return <Navigate to="/" replace />;
+  const notice = sessionEnd === "expired" ? NOTICES.expired : NOTICES.missing;
+  return <Navigate to="/" replace state={{ notice }} />;
 }
 
 export const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return <Spinner label="Verificando autenticação..." />;
-  if (!isAuthenticated) return <RedirectToLogin notice="Faça login para acessar esta página." />;
+  if (!isAuthenticated) return <RedirectToLogin />;
   return children;
 };
 
@@ -30,7 +37,7 @@ export const AdminRoute = ({ children }) => {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
 
   if (isLoading) return <Spinner label="Verificando permissões..." />;
-  if (!isAuthenticated) return <RedirectToLogin notice="Faça login para acessar esta página." />;
+  if (!isAuthenticated) return <RedirectToLogin />;
   if (!isAdmin) return <Navigate to="/home" replace />;
   return children;
 };
