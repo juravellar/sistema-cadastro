@@ -1,7 +1,13 @@
 import { vi } from "vitest";
 
 export const ADMIN = { id: 1, username: "admin", email: "admin@example.com", role: "admin" };
-export const USER = { id: 2, username: "maria", email: "maria@example.com", role: "user" };
+export const USER = {
+  id: 2,
+  username: "maria",
+  email: "maria@example.com",
+  role: "user",
+  createdAt: "2026-10-09T12:00:00.000Z",
+};
 
 function jsonResponse(status, body) {
   return { ok: status < 400, status, json: async () => body };
