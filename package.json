@@ -23,7 +23,7 @@
     "webhook:logs": "pm2 logs webhook-server",
     "clean": "rimraf backend/node_modules frontend/node_modules backend/dist frontend/dist",
     "test": "npm run test:webhook && npm test --prefix backend",
-    "test:webhook": "node --test \"test/**/*.test.js\""
+    "test:webhook": "node --test test/*.test.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

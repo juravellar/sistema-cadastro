@@ -9,7 +9,7 @@
     "migrate:down": "node db/migrate.js down",
     "create-db": "node scripts/create-database.js",
     "create-admin": "node scripts/create-admin.js",
-    "test": "NODE_ENV=test node --test --test-concurrency=1 \"test/**/*.test.js\""
+    "test": "NODE_ENV=test node --test --test-concurrency=1 test/*.test.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
