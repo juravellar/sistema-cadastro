@@ -23,11 +23,9 @@ updates:
     groups:
       dependencias:
         patterns: ["*"]
-    # Exigem Node 22; o projeto roda em Node 20 (.nvmrc, Dockerfiles, CI e
-    # servidor). Remover ao atualizar o Node.
+    # jsdom 30+ exige Node 22.22 ou mais recente, acima do mínimo do projeto
+    # (22.13). Remover quando o mínimo subir.
     ignore:
-      - dependency-name: vitest
-        versions: [">=5"]
       - dependency-name: jsdom
         versions: [">=30"]
   - package-ecosystem: github-actions

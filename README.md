@@ -2,6 +2,8 @@
 
 Cadastro e autenticação de usuários com **frontend em React (Vite)**, **backend em Node.js (Express)** e banco **PostgreSQL**. Usuários comuns se cadastram e gerenciam a própria conta (dados e senha); administradores gerenciam os usuários por um painel.
 
+O projeto foi feito para **clonar e rodar localmente**: com Docker, basta um comando. Publicar num servidor é opcional (veja o fim deste README).
+
 ---
 
 ## Estrutura do projeto
@@ -21,15 +23,15 @@ sistema-cadastro/
 │   ├── db/migrations/          # schema versionado
 │   ├── scripts/                # create-database.js, create-admin.js
 │   ├── test/                   # testes de integração (node:test + supertest)
-│   └── ecosystem.config.js     # PM2
+│   └── ecosystem.config.js     # PM2 (opcional, só para publicar)
 ├── frontend/                   # SPA React (Vite + Bootstrap)
 │   └── src/                    # páginas, componentes, contexto de auth, cliente de API (lib/api.js), testes
-├── webhook-server.js           # webhook do GitHub que dispara o deploy
-├── webhook-ecosystem.config.js # PM2 do webhook
-├── scripts/deploy-aapanel.sh   # deploy no servidor (pull, deps, migrations, build, restart)
+├── webhook-server.js           # webhook de deploy (opcional, só para publicar)
+├── webhook-ecosystem.config.js # PM2 do webhook (opcional)
+├── scripts/deploy-aapanel.sh   # deploy num servidor aaPanel (opcional)
 ├── test/                       # testes do webhook
 ├── nginx/                      # imagem nginx do compose de produção
-├── nginx-config/               # configs do nginx do servidor (deploy.chatflows.com.br)
+├── nginx-config/               # nginx de um servidor de produção (opcional)
 ├── docker-compose.yml          # desenvolvimento
 ├── docker-compose.prod.yml     # produção com Docker
 ├── .github/                    # CI, template de PR, Dependabot
@@ -39,9 +41,13 @@ sistema-cadastro/
 
 ---
 
-## Rodando com Docker (desenvolvimento)
+## Como rodar (com Docker)
+
+Requisito: [Docker](https://docs.docker.com/get-docker/) com o Compose.
 
 ```bash
+git clone https://github.com/juravellar/sistema-cadastro.git
+cd sistema-cadastro
 docker compose up --build
 ```
 
@@ -63,7 +69,7 @@ Produção com Docker (`docker-compose.prod.yml`) está descrita em [DOCKER.md](
 
 ## Rodando sem Docker
 
-Requisitos: Node.js 20+ e um PostgreSQL acessível.
+Requisitos: Node.js 22.13+ (veja o `.nvmrc`) e um PostgreSQL acessível.
 
 ```bash
 npm run install:all
@@ -116,11 +122,15 @@ O CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) roda testes, lint, b
 
 ---
 
-## Deploy em produção (aaPanel + PM2)
+## Publicar num servidor (opcional)
+
+Não é necessário para usar o projeto localmente. Os arquivos abaixo ficam no repositório para quem quiser publicar; sem esse uso, eles não interferem em nada.
+
+### Exemplo: aaPanel + PM2
 
 O servidor serve o build do frontend pelo nginx, roda o backend no PM2 (porta 3002) e recebe pushes do GitHub pelo webhook (porta 3003).
 
-### Primeira instalação
+#### Primeira instalação
 
 1. Clone o repositório no servidor e crie `backend/.env` com, no mínimo, `NODE_ENV=production`, `SESSION_SECRET` e as variáveis `PG*` (veja o [.env.example](.env.example)). O backend só inicia sem `SESSION_SECRET` com `NODE_ENV=development` ou `test`; em qualquer outro caso, inclusive sem `NODE_ENV`, ele é obrigatório. Para gerar um segredo:
    ```bash
@@ -133,7 +143,7 @@ O servidor serve o build do frontend pelo nginx, roda o backend no PM2 (porta 30
    ```
 3. Instale as configs de [nginx-config/](nginx-config/) no nginx do servidor e recarregue. `/api/` vai para o backend (3002) e `/webhook/` para o webhook (3003).
 
-### Deploy automático pelo webhook
+#### Deploy automático pelo webhook
 
 1. Inicie o webhook com o segredo no ambiente. Ele não lê `.env`, e o segredo não deve ir para o arquivo do PM2:
    ```bash

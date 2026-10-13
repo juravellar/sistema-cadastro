@@ -4,7 +4,7 @@ Convenções do projeto. O CI verifica as que podem ser automatizadas.
 
 ## Ambiente
 
-- Node.js 20 (`.nvmrc`). Com nvm: `nvm use`.
+- Node.js 22.13 ou mais recente (`.nvmrc`). Com nvm: `nvm use`.
 - `npm run install:all` instala raiz, backend e frontend.
 - Para rodar o projeto, veja o [README](README.md).
 
